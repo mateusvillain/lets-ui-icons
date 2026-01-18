@@ -1,0 +1,39 @@
+{
+  "name": "lets-ui-icons",
+  "version": "0.0.0",
+  "description": "",
+  "keywords": [
+    "design",
+    "system",
+    "icons",
+    "icon",
+    "library"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mateusvillain/lets-ui-icons.git"
+  },
+  "license": "ISC",
+  "author": "Mateus Villain",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "prepare": "husky install"
+  },
+  "lint-staged": {
+    "*.{js,ts,css,scss,html,json,md}": [
+      "prettier --write"
+    ],
+    "*.{css,scss}": [
+      "stylelint --fix"
+    ]
+  },
+  "devDependencies": {
+    "husky": "^8.0.0",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.8.0",
+    "stylelint": "^16.26.1",
+    "stylelint-config-prettier": "^9.0.5",
+    "stylelint-config-standard": "^39.0.1"
+  }
+}

@@ -15,25 +15,55 @@
   },
   "license": "ISC",
   "author": "Mateus Villain",
-  "type": "commonjs",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "optimize": "npx svgo -f src/icons -r",
+    "build:icons": "node scripts/build-icons.js",
+    "build": "npm run optimize && npm run build:icons"
   },
   "lint-staged": {
     "*.{js,ts,css,scss,html,json,md}": [
       "prettier --write"
     ],
+    "*.html": [
+      "html-validate"
+    ],
     "*.{css,scss}": [
       "stylelint --fix"
+    ],
+    "*.md": [
+      "markdownlint-cli2"
     ]
   },
   "devDependencies": {
-    "husky": "^8.0.0",
+    "@commitlint/cli": "^20.3.1",
+    "@commitlint/config-conventional": "^20.3.1",
+    "@eslint/css": "^0.14.1",
+    "@eslint/js": "^9.39.2",
+    "@eslint/json": "^0.14.0",
+    "@eslint/markdown": "^7.5.1",
+    "cssnano": "^7.1.2",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "html-validate": "^10.5.0",
+    "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
-    "prettier": "^3.8.0",
+    "markdownlint-cli2": "^0.20.0",
+    "playwright": "^1.57.0",
+    "postcss": "^8.5.6",
+    "postcss-cli": "^11.0.1",
+    "prettier": "^3.7.4",
+    "sass": "^1.87.0",
     "stylelint": "^16.26.1",
-    "stylelint-config-prettier": "^9.0.5",
-    "stylelint-config-standard": "^39.0.1"
+    "stylelint-config-standard-scss": "^16.0.0",
+    "stylelint-scss": "^6.14.0",
+    "svgo": "^4.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "fs-extra": "^11.3.3",
+    "node-fetch": "^3.3.2"
   }
 }

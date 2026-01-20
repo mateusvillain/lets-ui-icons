@@ -1,10 +1,6 @@
 {
-  "extends": ["stylelint-config-standard"],
+  "extends": ["stylelint-config-standard-scss"],
   "rules": {
-    "block-no-empty": true,
-    "color-no-invalid-hex": true,
-    "declaration-block-no-duplicate-properties": true,
-    "no-descending-specificity": null,
-    "font-family-no-missing-generic-family-keyword": null
+    "selector-class-pattern": null
   }
 }

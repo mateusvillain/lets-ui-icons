@@ -19,9 +19,10 @@
   "main": "index.js",
   "scripts": {
     "prepare": "husky install",
-    "optimize": "npx svgo -f src/icons -r",
+    "optimize": "npx svgo -f icons -r",
     "build:icons": "node scripts/build-icons.js",
-    "build": "npm run optimize && npm run build:icons"
+    "css": "postcss dist/**/*.css --replace",
+    "build": "npm run optimize && npm run build:icons && npm run css"
   },
   "lint-staged": {
     "*.{js,ts,css,scss,html,json,md}": [
@@ -44,6 +45,7 @@
     "@eslint/js": "^9.39.2",
     "@eslint/json": "^0.14.0",
     "@eslint/markdown": "^7.5.1",
+    "autoprefixer": "^10.4.23",
     "cssnano": "^7.1.2",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",

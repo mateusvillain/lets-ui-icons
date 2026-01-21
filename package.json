@@ -1,22 +1,33 @@
 {
   "name": "lets-ui-icons",
   "version": "0.0.0",
-  "description": "",
+  "description": "Icon library for Let’s UI, providing consistent and customizable icons for modern user interfaces.",
   "keywords": [
     "design",
     "system",
     "icons",
-    "icon",
-    "library"
+    "library",
+    "css",
+    "figma",
+    "solid",
+    "outline",
+    "svg"
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/mateusvillain/lets-ui-icons.git"
   },
-  "license": "ISC",
-  "author": "Mateus Villain",
+  "bugs": {
+    "url": "https://github.com/mateusvillain/lets-ui-icons/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Mateus Villain",
+    "email": "mateus@mateusvillain.com",
+    "url": "https://mateusvillain.com"
+  },
   "type": "module",
-  "main": "index.js",
+  "main": "dist/lets-ui-icons.css",
   "scripts": {
     "prepare": "husky install",
     "optimize": "npx svgo -f icons -r",

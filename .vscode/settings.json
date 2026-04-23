@@ -13,18 +13,10 @@
   "[css]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "[scss]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-
   "css.validate": true,
-  "scss.validate": true,
 
   "editor.wordWrap": "on",
   "editor.minimap.enabled": false,
-  "mdx.trace.server.format": "text",
-  "figma.assetExportDirectory": "public/images",
-  "figma.autocompleteBlocks": false,
 
   "workbench.editorAssociations": {
     "*.svg": "default"

@@ -27,9 +27,12 @@
     "url": "https://mateusvillain.com"
   },
   "type": "module",
-  "main": "dist/lets-ui-icons.css",
+  "style": "dist/lets-ui-icons.css",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "optimize": "npx svgo -f icons -r",
+    "optimize": "npx svgo -f dist/icons -r",
     "build:icons": "node scripts/build-icons.js",
     "build": "npm run optimize && npm run build:icons"
   },

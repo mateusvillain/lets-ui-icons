@@ -21,7 +21,7 @@ if (!FILE_ID || !TOKEN) {
 ========================= */
 
 const RAW_DIR = 'icons/raw';
-const OUT_DIR = 'icons/optimized';
+const OUT_DIR = 'dist/icons';
 
 const headers = {
   'X-Figma-Token': TOKEN,

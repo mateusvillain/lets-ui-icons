@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 
 // Paths
-const ICONS_DIR = 'icons/optimized';
+const ICONS_DIR = 'dist/icons';
 const BASE_CSS = 'src/styles/base.css';
 const OUT_FILE = 'dist/lets-ui-icons.css';
 
@@ -52,8 +52,8 @@ async function run() {
       iconsCss += `
 .lui.lui-${name} {
   background-color: currentColor;
-  mask-image: url('/icons/optimized/${variants.outline}');
-  -webkit-mask-image: url('/icons/optimized/${variants.outline}');
+  mask-image: url('icons/${variants.outline}');
+  -webkit-mask-image: url('icons/${variants.outline}');
 }
 `;
     }
@@ -62,8 +62,8 @@ async function run() {
       iconsCss += `
 .lui-solid.lui-${name} {
   background-color: currentColor;
-  mask-image: url('/icons/optimized/${variants.solid}');
-  -webkit-mask-image: url('/icons/optimized/${variants.solid}');
+  mask-image: url('icons/${variants.solid}');
+  -webkit-mask-image: url('icons/${variants.solid}');
 }
 `;
     }

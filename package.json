@@ -29,24 +29,13 @@
   "type": "module",
   "main": "dist/lets-ui-icons.css",
   "scripts": {
-    "prepare": "husky install",
     "optimize": "npx svgo -f icons -r",
     "build:icons": "node scripts/build-icons.js",
-    "css": "postcss dist/**/*.css --replace",
-    "build": "npm run optimize && npm run build:icons && npm run css"
+    "build": "npm run optimize && npm run build:icons"
   },
   "lint-staged": {
-    "*.{js,ts,css,scss,html,json,md}": [
+    "*.{js,ts,css,json,md}": [
       "prettier --write"
-    ],
-    "*.html": [
-      "html-validate"
-    ],
-    "*.{css,scss}": [
-      "stylelint --fix"
-    ],
-    "*.md": [
-      "markdownlint-cli2"
     ]
   },
   "devDependencies": {
@@ -54,29 +43,14 @@
     "@commitlint/config-conventional": "^20.3.1",
     "@eslint/css": "^0.14.1",
     "@eslint/js": "^9.39.2",
-    "@eslint/json": "^0.14.0",
-    "@eslint/markdown": "^7.5.1",
     "autoprefixer": "^10.4.23",
-    "cssnano": "^7.1.2",
+    "dotenv": "^17.2.3",
     "eslint": "^9.39.2",
-    "eslint-config-prettier": "^10.1.8",
-    "html-validate": "^10.5.0",
+    "fs-extra": "^11.3.3",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
-    "markdownlint-cli2": "^0.20.0",
-    "playwright": "^1.57.0",
-    "postcss": "^8.5.6",
-    "postcss-cli": "^11.0.1",
+    "node-fetch": "^3.3.2",
     "prettier": "^3.7.4",
-    "sass": "^1.87.0",
-    "stylelint": "^16.26.1",
-    "stylelint-config-standard-scss": "^16.0.0",
-    "stylelint-scss": "^6.14.0",
     "svgo": "^4.0.0"
-  },
-  "dependencies": {
-    "dotenv": "^17.2.3",
-    "fs-extra": "^11.3.3",
-    "node-fetch": "^3.3.2"
   }
 }

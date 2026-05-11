@@ -89,15 +89,15 @@ async function run() {
 
   const file = await getFile();
   const componentSets = file.componentSets || {};
+  const allComponents = file.components || {};
+
+  /* ── Component Sets (variants: outline / solid) ── */
+
+  const variantComponentIds = new Set();
 
   const sets = Object.entries(componentSets).filter(([, set]) =>
     set.name.startsWith('lui/')
   );
-
-  if (!sets.length) {
-    console.warn('⚠️ Nenhum Component Set encontrado com prefixo "lui/"');
-    return;
-  }
 
   for (const [setNodeId, set] of sets) {
     const baseName = set.name.replace('lui/', '');
@@ -107,7 +107,8 @@ async function run() {
     const children = (setNode.children || []).filter((c) => c?.id);
     if (!children.length) continue;
 
-    // 👉 EXPORTAÇÃO EM LOTE (AQUI ESTÁ A MÁGICA)
+    children.forEach((c) => variantComponentIds.add(c.id));
+
     const ids = children.map((c) => c.id);
     const imagesMap = await exportSVGBatch(ids);
 
@@ -127,6 +128,34 @@ async function run() {
       await fs.writeFile(`${OUT_DIR}/${fileName}`, optimized);
 
       console.log(`✔ ${baseName} (${style})`);
+    }
+  }
+
+  /* ── Standalone components (no variants) ── */
+
+  const standaloneComponents = Object.entries(allComponents).filter(
+    ([id, comp]) => comp.name.startsWith('lui/') && !variantComponentIds.has(id)
+  );
+
+  if (standaloneComponents.length) {
+    const standaloneIds = standaloneComponents.map(([id]) => id);
+    const imagesMap = await exportSVGBatch(standaloneIds);
+
+    for (const [id, comp] of standaloneComponents) {
+      const url = imagesMap[id];
+      if (!url) continue;
+
+      const baseName = comp.name.replace('lui/', '');
+      const fileName = `${baseName}.svg`;
+
+      const svg = await fetch(url).then((r) => r.text());
+
+      await fs.writeFile(`${RAW_DIR}/${fileName}`, svg);
+
+      const optimized = optimize(svg, svgoConfig).data;
+      await fs.writeFile(`${OUT_DIR}/${fileName}`, optimized);
+
+      console.log(`✔ ${baseName} (standalone)`);
     }
   }
 

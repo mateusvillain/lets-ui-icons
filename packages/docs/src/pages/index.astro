@@ -1,0 +1,632 @@
+---
+import { readdir, readFile } from 'node:fs/promises';
+import { join, dirname } from 'node:path';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+const iconsPkgDir = dirname(require.resolve('@lets-ui/icons/package.json'));
+const iconsDistDir = join(iconsPkgDir, 'dist');
+const categoriesPath = join(iconsPkgDir, 'categories.json');
+
+const categories = JSON.parse(await readFile(categoriesPath, 'utf8'));
+const svgFiles = (await readdir(iconsDistDir)).filter((f) => f.endsWith('.svg'));
+
+const iconMap: Record<string, { outline?: string; solid?: string }> = {};
+for (const file of svgFiles) {
+  const isSolid = file.endsWith('-solid.svg');
+  const name = file.replace('-solid.svg', '').replace('.svg', '');
+  const content = await readFile(join(iconsDistDir, file), 'utf8');
+  if (!iconMap[name]) iconMap[name] = {};
+  iconMap[name][isSolid ? 'solid' : 'outline'] = content;
+}
+
+const iconToCategories: Record<string, string[]> = {};
+for (const [cat, names] of Object.entries(categories) as [string, string[]][]) {
+  for (const name of names) {
+    if (!iconToCategories[name]) iconToCategories[name] = [];
+    iconToCategories[name].push(cat);
+  }
+}
+
+function toDisplaySvg(svg: string) {
+  return svg.replace('<svg', '<svg fill="currentColor"');
+}
+
+const icons = Object.entries(iconMap)
+  .sort(([a], [b]) => a.localeCompare(b))
+  .map(([name, variants]) => ({
+    name,
+    cats: iconToCategories[name] ?? ['misc'],
+    hasSolid: !!variants.solid,
+    outlineDisplay: toDisplaySvg(variants.outline ?? ''),
+    outlineSvg: variants.outline ?? '',
+    solidSvg: variants.solid ?? '',
+  }));
+
+const allCategories = Object.keys(categories).sort();
+const iconData = icons.map(({ name, cats, hasSolid, outlineSvg, solidSvg }) => ({
+  name,
+  cats,
+  hasSolid,
+  outlineSvg,
+  solidSvg,
+}));
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Let's UI Icons</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      :root {
+        --bg: #ffffff;
+        --bg-subtle: #f9fafb;
+        --border: #e5e7eb;
+        --text: #111827;
+        --muted: #6b7280;
+        --hover: #f3f4f6;
+        --r: 8px;
+        --rs: 6px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      body { background: var(--bg-subtle); color: var(--text); min-height: 100vh; }
+
+      /* ── Header ── */
+      .header {
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        padding: 0 24px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        position: sticky;
+        top: 0;
+        z-index: 20;
+      }
+
+      .logo { font-size: 14px; font-weight: 600; flex-shrink: 0; letter-spacing: -.01em; }
+      .logo-count { font-weight: 400; color: var(--muted); font-size: 12px; margin-left: 6px; }
+
+      .search-wrap { position: relative; flex: 1; max-width: 280px; margin-left: auto; }
+      .search-icon {
+        position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+        color: var(--muted); pointer-events: none; width: 14px; height: 14px;
+      }
+      .search-input {
+        width: 100%; padding: 7px 12px 7px 32px;
+        border: 1px solid var(--border); border-radius: var(--rs);
+        font-size: 13px; background: var(--bg-subtle); outline: none;
+        transition: border-color .15s, background .15s; color: var(--text);
+        font-family: inherit;
+      }
+      .search-input:focus { border-color: #9ca3af; background: var(--bg); }
+      .search-input::placeholder { color: var(--muted); }
+
+      /* ── Controls ── */
+      .controls {
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        padding: 10px 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .cats { display: flex; gap: 5px; flex-wrap: wrap; flex: 1; min-width: 0; }
+
+      .cat-btn {
+        padding: 4px 11px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        font-size: 12px;
+        background: none;
+        color: var(--muted);
+        cursor: pointer;
+        transition: all .15s;
+        text-transform: capitalize;
+        white-space: nowrap;
+        font-family: inherit;
+      }
+      .cat-btn:hover { border-color: #9ca3af; color: var(--text); }
+      .cat-btn.active { background: var(--text); border-color: var(--text); color: #fff; }
+
+      .tools { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+      .tool-group { display: flex; align-items: center; gap: 7px; }
+      .tool-label { font-size: 12px; color: var(--muted); }
+
+      .color-input {
+        width: 26px; height: 26px; padding: 3px;
+        border: 1px solid var(--border); border-radius: var(--rs);
+        cursor: pointer; background: none; flex-shrink: 0;
+      }
+
+      input[type="range"] {
+        -webkit-appearance: none; appearance: none;
+        width: 96px; height: 3px;
+        background: var(--border); border-radius: 2px;
+        outline: none; cursor: pointer;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 14px; height: 14px;
+        background: var(--text); border-radius: 50%;
+      }
+      input[type="range"]::-moz-range-thumb {
+        width: 14px; height: 14px;
+        background: var(--text); border-radius: 50%; border: none;
+      }
+      .size-value {
+        font-size: 12px; color: var(--muted);
+        min-width: 34px; text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ── Main ── */
+      .main { padding: 20px 24px; max-width: 1440px; margin: 0 auto; }
+      .results-count { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+
+      /* ── Grid ── */
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+
+      .icon-card {
+        all: unset;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 18px 8px 13px;
+        border: 1px solid var(--border);
+        border-radius: var(--r);
+        background: var(--bg);
+        cursor: pointer;
+        transition: border-color .15s, box-shadow .15s, transform .15s;
+        text-align: center;
+        width: 100%;
+      }
+      .icon-card:hover {
+        border-color: #9ca3af;
+        box-shadow: 0 2px 8px rgba(0,0,0,.07);
+        transform: translateY(-1px);
+      }
+      .icon-card:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+      .icon-card.hidden { display: none; }
+
+      .icon-svg {
+        display: flex; align-items: center; justify-content: center;
+        color: var(--icon-color, #111827);
+      }
+      .icon-svg svg {
+        width: var(--icon-size, 24px);
+        height: var(--icon-size, 24px);
+        display: block;
+        transition: width .1s, height .1s;
+      }
+
+      .icon-label { font-size: 10.5px; color: var(--muted); word-break: break-all; line-height: 1.35; }
+
+      .no-results {
+        grid-column: 1 / -1; text-align: center;
+        padding: 80px 0; color: var(--muted); font-size: 14px; display: none;
+      }
+      .no-results.visible { display: block; }
+
+      /* ── Modal ── */
+      dialog {
+        width: calc(100% - 32px);
+        max-width: 460px;
+        max-height: 88vh;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 0;
+        box-shadow: 0 24px 60px rgba(0,0,0,.14);
+        overflow: hidden;
+      }
+      dialog[open] { display: flex; flex-direction: column; }
+      dialog::backdrop { background: rgba(0,0,0,.35); backdrop-filter: blur(3px); }
+
+      .modal-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 14px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+      }
+      .modal-title { font-weight: 600; font-size: 13.5px; letter-spacing: -.01em; }
+      .modal-cats { font-size: 11px; color: var(--muted); margin-top: 1px; text-transform: capitalize; }
+
+      .modal-close {
+        all: unset; box-sizing: border-box;
+        width: 26px; height: 26px; background: var(--hover);
+        border-radius: var(--rs); display: flex; align-items: center;
+        justify-content: center; cursor: pointer; color: var(--muted);
+        flex-shrink: 0; transition: background .15s, color .15s;
+        font-size: 12px;
+      }
+      .modal-close:hover { background: var(--border); color: var(--text); }
+
+      .modal-preview {
+        padding: 28px 20px 20px;
+        display: flex; flex-direction: column; align-items: center; gap: 14px;
+        background: var(--bg-subtle); border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+      .modal-icon { color: #111827; }
+      .modal-icon svg { width: 48px; height: 48px; display: block; }
+
+      .variant-toggle {
+        display: flex; gap: 2px;
+        background: var(--border); padding: 2px; border-radius: 999px;
+      }
+      .var-btn {
+        all: unset; box-sizing: border-box;
+        padding: 4px 14px; border-radius: 999px;
+        font-size: 12px; cursor: pointer; color: var(--muted);
+        transition: all .15s; font-family: inherit;
+      }
+      .var-btn.active {
+        background: var(--bg); color: var(--text);
+        font-weight: 500; box-shadow: 0 1px 2px rgba(0,0,0,.1);
+      }
+
+      .modal-body { overflow-y: auto; flex: 1; }
+
+      .tabs { display: flex; padding: 0 18px; border-bottom: 1px solid var(--border); }
+      .tab {
+        all: unset; box-sizing: border-box;
+        padding: 11px 2px; margin-right: 18px;
+        border-bottom: 2px solid transparent;
+        font-size: 13px; color: var(--muted);
+        cursor: pointer; transition: all .15s;
+        white-space: nowrap; font-family: inherit;
+      }
+      .tab.active { color: var(--text); border-bottom-color: var(--text); font-weight: 500; }
+
+      .panel { padding: 16px 18px; display: none; }
+      .panel.active { display: block; }
+
+      .code-block {
+        background: var(--bg-subtle);
+        border: 1px solid var(--border);
+        border-radius: var(--rs);
+        padding: 12px 14px;
+        font-family: 'SF Mono', 'Fira Code', 'Fira Mono', Consolas, monospace;
+        font-size: 12.5px; line-height: 1.6;
+        white-space: pre-wrap; word-break: break-all;
+        color: var(--text);
+      }
+
+      .code-actions { margin-top: 10px; display: flex; justify-content: flex-end; gap: 8px; }
+
+      .btn {
+        all: unset; box-sizing: border-box;
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 6px 13px;
+        border: 1px solid var(--border); border-radius: var(--rs);
+        font-size: 12.5px; background: var(--bg); color: var(--text);
+        cursor: pointer; transition: all .15s; font-family: inherit;
+        white-space: nowrap;
+      }
+      .btn:hover { background: var(--hover); }
+      .btn:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+      .btn-dark { background: var(--text); color: #fff; border-color: var(--text); }
+      .btn-dark:hover { opacity: .82; background: var(--text); }
+      .btn.copied { color: #16a34a; border-color: #86efac; background: #f0fdf4; }
+    </style>
+  </head>
+  <body>
+
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        Let's UI Icons
+        <span class="logo-count">{icons.length} icons</span>
+      </div>
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/>
+        </svg>
+        <input id="search" class="search-input" type="search" placeholder="Search icons…" autocomplete="off" />
+      </div>
+    </header>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div class="cats">
+        <button class="cat-btn active" data-cat="all">All</button>
+        {allCategories.map((cat) => (
+          <button class="cat-btn" data-cat={cat}>{cat}</button>
+        ))}
+      </div>
+      <div class="tools">
+        <div class="tool-group">
+          <span class="tool-label">Color</span>
+          <input id="colorPicker" class="color-input" type="color" value="#111827" title="Icon color" />
+        </div>
+        <div class="tool-group">
+          <span class="tool-label">Size</span>
+          <input id="sizeSlider" type="range" min="16" max="80" step="8" value="24" />
+          <span class="size-value" id="sizeValue">24px</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid -->
+    <main class="main">
+      <p class="results-count" id="resultsCount">{icons.length} icons</p>
+      <div class="grid" id="grid">
+        {icons.map((icon, i) => (
+          <button
+            class="icon-card"
+            data-index={i}
+            data-name={icon.name}
+            data-cats={icon.cats.join(',')}
+          >
+            <div class="icon-svg">
+              <Fragment set:html={icon.outlineDisplay} />
+            </div>
+            <span class="icon-label">{icon.name}</span>
+          </button>
+        ))}
+        <div class="no-results" id="noResults">No icons found</div>
+      </div>
+    </main>
+
+    <!-- Modal -->
+    <dialog id="modal">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title" id="modalTitle"></div>
+          <div class="modal-cats" id="modalCats"></div>
+        </div>
+        <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-preview">
+        <div class="modal-icon" id="modalIcon"></div>
+        <div class="variant-toggle" id="variantToggle">
+          <button class="var-btn active" data-var="outline">Outline</button>
+          <button class="var-btn" data-var="solid">Solid</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="tabs">
+          <button class="tab active" data-tab="web">Web</button>
+          <button class="tab" data-tab="wc">Web Component</button>
+          <button class="tab" data-tab="svg">SVG</button>
+        </div>
+        <div class="panel active" id="panelWeb">
+          <pre class="code-block" id="codeWeb"></pre>
+          <div class="code-actions">
+            <button class="btn" id="copyWeb">Copy</button>
+          </div>
+        </div>
+        <div class="panel" id="panelWc">
+          <pre class="code-block" id="codeWc"></pre>
+          <div class="code-actions">
+            <button class="btn" id="copyWc">Copy</button>
+          </div>
+        </div>
+        <div class="panel" id="panelSvg">
+          <pre class="code-block" id="codeSvg"></pre>
+          <div class="code-actions">
+            <button class="btn" id="copySvg">Copy SVG</button>
+            <button class="btn btn-dark" id="downloadSvg">↓ Download SVG</button>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Icon data for client JS -->
+    <script type="application/json" id="icon-data" set:html={JSON.stringify(iconData)} />
+
+    <script>
+      const icons = JSON.parse(document.getElementById('icon-data').textContent);
+
+      // ── State ──
+      let activeCategory = 'all';
+      let searchQuery = '';
+      let activeVariant = 'outline';
+      let currentIcon = null;
+
+      // ── Elements ──
+      const grid = document.getElementById('grid');
+      const cards = [...grid.querySelectorAll('.icon-card')];
+      const noResults = document.getElementById('noResults');
+      const resultsCount = document.getElementById('resultsCount');
+      const modal = document.getElementById('modal');
+
+      // ── Filter ──
+      function applyFilter() {
+        const q = searchQuery.toLowerCase();
+        let visible = 0;
+
+        for (const card of cards) {
+          const matchesCat =
+            activeCategory === 'all' ||
+            card.dataset.cats.split(',').includes(activeCategory);
+          const matchesSearch = !q || card.dataset.name.includes(q);
+
+          if (matchesCat && matchesSearch) {
+            card.classList.remove('hidden');
+            visible++;
+          } else {
+            card.classList.add('hidden');
+          }
+        }
+
+        noResults.classList.toggle('visible', visible === 0);
+        resultsCount.textContent = `${visible} icon${visible === 1 ? '' : 's'}`;
+      }
+
+      // ── Category ──
+      document.querySelectorAll('.cat-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.cat-btn').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          activeCategory = btn.dataset.cat;
+          applyFilter();
+        });
+      });
+
+      // ── Search ──
+      let searchTimer;
+      document.getElementById('search').addEventListener('input', (e) => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+          searchQuery = e.target.value.trim();
+          applyFilter();
+        }, 150);
+      });
+
+      // ── Color ──
+      document.getElementById('colorPicker').addEventListener('input', (e) => {
+        document.documentElement.style.setProperty('--icon-color', e.target.value);
+      });
+
+      // ── Size ──
+      const sizeSlider = document.getElementById('sizeSlider');
+      const sizeValue = document.getElementById('sizeValue');
+
+      sizeSlider.addEventListener('input', (e) => {
+        const px = Number(e.target.value);
+        document.documentElement.style.setProperty('--icon-size', px + 'px');
+        sizeValue.textContent = px + 'px';
+      });
+
+      // ── Modal ──
+      function toDisplaySvg(svg) {
+        if (!svg) return '';
+        return svg.replace('<svg', '<svg fill="currentColor"');
+      }
+
+      function setStyleAttr(el, styles) {
+        Object.assign(el.style, styles);
+      }
+
+      function updateModalContent() {
+        const icon = currentIcon;
+        if (!icon) return;
+
+        const isSolid = activeVariant === 'solid' && icon.hasSolid;
+        const rawSvg = isSolid ? icon.solidSvg : icon.outlineSvg;
+        const displaySvg = toDisplaySvg(rawSvg);
+
+        // Preview
+        const modalIcon = document.getElementById('modalIcon');
+        modalIcon.innerHTML = displaySvg;
+        const svgEl = modalIcon.querySelector('svg');
+        if (svgEl) setStyleAttr(svgEl, { width: '48px', height: '48px', display: 'block' });
+
+        // Code — Web
+        const webCode = isSolid
+          ? `<i class="lui-solid lui-${icon.name}"></i>`
+          : `<i class="lui lui-${icon.name}"></i>`;
+        document.getElementById('codeWeb').textContent = webCode;
+
+        // Code — Web Component
+        const wcCode = isSolid
+          ? `<lui-${icon.name} solid></lui-${icon.name}>`
+          : `<lui-${icon.name}></lui-${icon.name}>`;
+        document.getElementById('codeWc').textContent = wcCode;
+
+        // Code — SVG
+        document.getElementById('codeSvg').textContent = rawSvg;
+      }
+
+      function openModal(index) {
+        currentIcon = icons[index];
+        activeVariant = 'outline';
+
+        // Reset variant buttons
+        document.querySelectorAll('.var-btn').forEach((b) => {
+          b.classList.toggle('active', b.dataset.var === 'outline');
+        });
+
+        // Show/hide variant toggle
+        document.getElementById('variantToggle').style.display =
+          currentIcon.hasSolid ? 'flex' : 'none';
+
+        // Title + categories
+        document.getElementById('modalTitle').textContent = currentIcon.name;
+        document.getElementById('modalCats').textContent = currentIcon.cats.join(', ');
+
+        // Reset to first tab
+        activateTab('web');
+
+        updateModalContent();
+        modal.showModal();
+      }
+
+      cards.forEach((card) => {
+        card.addEventListener('click', () => openModal(Number(card.dataset.index)));
+      });
+
+      // Close
+      document.getElementById('modalClose').addEventListener('click', () => modal.close());
+      modal.addEventListener('click', (e) => { if (e.target === modal) modal.close(); });
+
+      // Variant
+      document.querySelectorAll('.var-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.var-btn').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          activeVariant = btn.dataset.var;
+          updateModalContent();
+        });
+      });
+
+      // Tabs
+      function activateTab(name) {
+        document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
+        document.getElementById('panelWeb').classList.toggle('active', name === 'web');
+        document.getElementById('panelWc').classList.toggle('active', name === 'wc');
+        document.getElementById('panelSvg').classList.toggle('active', name === 'svg');
+      }
+
+      document.querySelectorAll('.tab').forEach((tab) => {
+        tab.addEventListener('click', () => activateTab(tab.dataset.tab));
+      });
+
+      // Copy helper
+      function copyText(text, btn) {
+        navigator.clipboard.writeText(text).then(() => {
+          const orig = btn.textContent;
+          btn.textContent = 'Copied!';
+          btn.classList.add('copied');
+          setTimeout(() => {
+            btn.textContent = orig;
+            btn.classList.remove('copied');
+          }, 1800);
+        });
+      }
+
+      document.getElementById('copyWeb').addEventListener('click', (e) => {
+        copyText(document.getElementById('codeWeb').textContent, e.currentTarget);
+      });
+      document.getElementById('copyWc').addEventListener('click', (e) => {
+        copyText(document.getElementById('codeWc').textContent, e.currentTarget);
+      });
+      document.getElementById('copySvg').addEventListener('click', (e) => {
+        copyText(document.getElementById('codeSvg').textContent, e.currentTarget);
+      });
+
+      // Download SVG
+      document.getElementById('downloadSvg').addEventListener('click', () => {
+        if (!currentIcon) return;
+        const isSolid = activeVariant === 'solid' && currentIcon.hasSolid;
+        const svg = isSolid ? currentIcon.solidSvg : currentIcon.outlineSvg;
+        const filename = isSolid ? `${currentIcon.name}-solid.svg` : `${currentIcon.name}.svg`;
+        const blob = new Blob([svg], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+    </script>
+  </body>
+</html>

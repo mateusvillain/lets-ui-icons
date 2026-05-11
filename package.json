@@ -15,6 +15,7 @@
   "scripts": {
     "pull": "pnpm --filter @lets-ui/icons pull",
     "build": "pnpm --filter @lets-ui/icons build && pnpm --filter @lets-ui/web build && pnpm --filter @lets-ui/webcomponents build",
+    "dev": "pnpm --filter @lets-ui/docs dev",
     "clean": "pnpm -r clean"
   },
   "lint-staged": {

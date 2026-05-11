@@ -21,10 +21,9 @@ if (!FILE_ID || !TOKEN) {
 ========================= */
 
 const OUT_DIR = 'dist';
+const CATEGORIES_FILE = 'categories.json';
 
-const headers = {
-  'X-Figma-Token': TOKEN,
-};
+const headers = { 'X-Figma-Token': TOKEN };
 
 /* =========================
    API
@@ -44,7 +43,6 @@ async function getNode(nodeId) {
     )}`,
     { headers }
   );
-
   const data = await res.json();
   const entry = Object.values(data.nodes || {})[0];
   return entry?.document || null;
@@ -52,14 +50,11 @@ async function getNode(nodeId) {
 
 async function exportSVGBatch(nodeIds = []) {
   if (!nodeIds.length) return {};
-
   const ids = nodeIds.join(',');
-
   const res = await fetch(
     `https://api.figma.com/v1/images/${FILE_ID}?ids=${ids}&format=svg`,
     { headers }
   );
-
   const data = await res.json();
   return data.images || {};
 }
@@ -68,11 +63,17 @@ async function exportSVGBatch(nodeIds = []) {
    HELPERS
 ========================= */
 
+// "arrows/arrow-down" → { category: "arrows", name: "arrow-down" }
+// "arrow-down"        → { category: "misc",   name: "arrow-down" }
+function parseName(raw) {
+  const parts = raw.split('/');
+  const name = parts[parts.length - 1];
+  const category = parts.length > 1 ? parts[0] : 'misc';
+  return { name, category };
+}
+
 function getStyleFromName(name = '') {
-  const lower = name.toLowerCase();
-  if (lower.includes('solid')) return 'solid';
-  if (lower.includes('outline')) return 'outline';
-  return 'outline';
+  return name.toLowerCase().includes('solid') ? 'solid' : 'outline';
 }
 
 /* =========================
@@ -86,16 +87,13 @@ async function run() {
   const componentSets = file.componentSets || {};
   const allComponents = file.components || {};
 
-  /* ── Component Sets (variants: outline / solid) ── */
-
+  const categories = {};
   const variantComponentIds = new Set();
 
-  const sets = Object.entries(componentSets).filter(([, set]) =>
-    set.name.startsWith('lui/')
-  );
+  /* ── Component Sets (variants: outline / solid) ── */
 
-  for (const [setNodeId, set] of sets) {
-    const baseName = set.name.replace('lui/', '');
+  for (const [setNodeId, set] of Object.entries(componentSets)) {
+    const { name: baseName, category } = parseName(set.name);
     const setNode = await getNode(setNodeId);
     if (!setNode) continue;
 
@@ -104,8 +102,7 @@ async function run() {
 
     children.forEach((c) => variantComponentIds.add(c.id));
 
-    const ids = children.map((c) => c.id);
-    const imagesMap = await exportSVGBatch(ids);
+    const imagesMap = await exportSVGBatch(children.map((c) => c.id));
 
     for (const child of children) {
       const url = imagesMap[child.id];
@@ -121,33 +118,47 @@ async function run() {
       await fs.writeFile(`${OUT_DIR}/${fileName}`, optimized);
       console.log(`✔ ${baseName} (${style})`);
     }
+
+    if (!categories[category]) categories[category] = new Set();
+    categories[category].add(baseName);
   }
 
   /* ── Standalone components (no variants) ── */
 
   const standaloneComponents = Object.entries(allComponents).filter(
-    ([id, comp]) => comp.name.startsWith('lui/') && !variantComponentIds.has(id)
+    ([id]) => !variantComponentIds.has(id)
   );
 
   if (standaloneComponents.length) {
-    const standaloneIds = standaloneComponents.map(([id]) => id);
-    const imagesMap = await exportSVGBatch(standaloneIds);
+    const imagesMap = await exportSVGBatch(
+      standaloneComponents.map(([id]) => id)
+    );
 
     for (const [id, comp] of standaloneComponents) {
       const url = imagesMap[id];
       if (!url) continue;
 
-      const baseName = comp.name.replace('lui/', '');
-      const fileName = `${baseName}.svg`;
-
+      const { name: baseName, category } = parseName(comp.name);
       const svg = await fetch(url).then((r) => r.text());
       const optimized = optimize(svg, svgoConfig).data;
 
-      await fs.writeFile(`${OUT_DIR}/${fileName}`, optimized);
+      await fs.writeFile(`${OUT_DIR}/${baseName}.svg`, optimized);
       console.log(`✔ ${baseName} (standalone)`);
+
+      if (!categories[category]) categories[category] = new Set();
+      categories[category].add(baseName);
     }
   }
 
+  /* ── Generate categories.json ── */
+
+  const output = Object.fromEntries(
+    Object.entries(categories)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([cat, names]) => [cat, [...names].sort()])
+  );
+
+  await fs.writeFile(CATEGORIES_FILE, JSON.stringify(output, null, 2) + '\n');
   console.log('✅ Ícones exportados com sucesso');
 }
 

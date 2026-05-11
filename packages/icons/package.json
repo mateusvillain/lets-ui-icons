@@ -25,8 +25,13 @@
   },
   "type": "module",
   "files": [
-    "dist"
+    "dist",
+    "categories.json"
   ],
+  "exports": {
+    "./package.json": "./package.json",
+    "./categories.json": "./categories.json"
+  },
   "scripts": {
     "pull": "node scripts/pull-icons.js",
     "optimize": "svgo -f dist -r",

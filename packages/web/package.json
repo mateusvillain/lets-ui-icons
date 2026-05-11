@@ -24,10 +24,14 @@
     "url": "https://mateusvillain.com"
   },
   "type": "module",
-  "style": "dist/lets-ui-icons.css",
+  "style": "dist/index.css",
   "files": [
     "dist"
   ],
+  "exports": {
+    ".": "./dist/index.css",
+    "./*": "./dist/*.css"
+  },
   "scripts": {
     "build": "node scripts/build-icons.js",
     "clean": "rm -rf dist"

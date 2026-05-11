@@ -28,6 +28,10 @@
   "files": [
     "dist"
   ],
+  "exports": {
+    ".": "./dist/index.js",
+    "./*": "./dist/*.js"
+  },
   "scripts": {
     "build": "node scripts/build-webcomponents.js",
     "clean": "rm -rf dist"

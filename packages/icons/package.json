@@ -1,0 +1,42 @@
+{
+  "name": "@lets-ui/icons",
+  "version": "0.1.0",
+  "description": "SVG icon source files for the Let's UI design system.",
+  "keywords": [
+    "design",
+    "system",
+    "icons",
+    "svg",
+    "figma"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mateusvillain/lets-ui-icons.git",
+    "directory": "packages/icons"
+  },
+  "bugs": {
+    "url": "https://github.com/mateusvillain/lets-ui-icons/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Mateus Villain",
+    "email": "mateus@mateusvillain.com",
+    "url": "https://mateusvillain.com"
+  },
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "pull": "node scripts/pull-icons.js",
+    "optimize": "svgo -f dist -r",
+    "build": "pnpm pull && pnpm optimize",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "dotenv": "^17.2.3",
+    "fs-extra": "^11.3.3",
+    "node-fetch": "^3.3.2",
+    "svgo": "^4.0.0"
+  }
+}

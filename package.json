@@ -1,24 +1,10 @@
 {
   "name": "lets-ui-icons",
-  "version": "0.1.0",
-  "description": "Icon library for Let’s UI, providing consistent and customizable icons for modern user interfaces.",
-  "keywords": [
-    "design",
-    "system",
-    "icons",
-    "library",
-    "css",
-    "figma",
-    "solid",
-    "outline",
-    "svg"
-  ],
+  "private": true,
+  "description": "Monorepo for the Let's UI Icons design system.",
   "repository": {
     "type": "git",
     "url": "https://github.com/mateusvillain/lets-ui-icons.git"
-  },
-  "bugs": {
-    "url": "https://github.com/mateusvillain/lets-ui-icons/issues"
   },
   "license": "MIT",
   "author": {
@@ -26,17 +12,10 @@
     "email": "mateus@mateusvillain.com",
     "url": "https://mateusvillain.com"
   },
-  "type": "module",
-  "style": "dist/lets-ui-icons.css",
-  "files": [
-    "dist"
-  ],
   "scripts": {
-    "pull": "node scripts/pull-icons.js",
-    "optimize": "npx svgo -f dist/icons -r",
-    "build:icons": "node scripts/build-icons.js",
-    "build": "pnpm pull && pnpm optimize && pnpm build:icons",
-    "clean": "rm -rf dist"
+    "pull": "pnpm --filter @lets-ui/icons pull",
+    "build": "pnpm --filter @lets-ui/icons build && pnpm --filter @lets-ui/web build && pnpm --filter @lets-ui/webcomponents build",
+    "clean": "pnpm -r clean"
   },
   "lint-staged": {
     "*.{js,ts,css,json,md}": [
@@ -48,14 +27,9 @@
     "@commitlint/config-conventional": "^20.3.1",
     "@eslint/css": "^0.14.1",
     "@eslint/js": "^9.39.2",
-    "autoprefixer": "^10.4.23",
-    "dotenv": "^17.2.3",
     "eslint": "^9.39.2",
-    "fs-extra": "^11.3.3",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
-    "node-fetch": "^3.3.2",
-    "prettier": "^3.7.4",
-    "svgo": "^4.0.0"
+    "prettier": "^3.7.4"
   }
 }

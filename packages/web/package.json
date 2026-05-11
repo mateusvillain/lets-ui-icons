@@ -1,0 +1,41 @@
+{
+  "name": "@lets-ui/web",
+  "version": "0.1.0",
+  "description": "CSS icon library for the Let's UI design system.",
+  "keywords": [
+    "design",
+    "system",
+    "icons",
+    "css",
+    "svg"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mateusvillain/lets-ui-icons.git",
+    "directory": "packages/web"
+  },
+  "bugs": {
+    "url": "https://github.com/mateusvillain/lets-ui-icons/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Mateus Villain",
+    "email": "mateus@mateusvillain.com",
+    "url": "https://mateusvillain.com"
+  },
+  "type": "module",
+  "style": "dist/lets-ui-icons.css",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "node scripts/build-icons.js",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@lets-ui/icons": "workspace:*"
+  },
+  "devDependencies": {
+    "fs-extra": "^11.3.3"
+  }
+}

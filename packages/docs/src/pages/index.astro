@@ -313,7 +313,32 @@ const iconData = icons.map(({ name, cats, hasSolid, outlineSvg, solidSvg }) => (
         flex: 1;
       }
 
-      .code-actions { display: flex; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
+      .code-wrap { position: relative; flex: 1; display: flex; flex-direction: column; }
+
+      .copy-icon-btn {
+        all: unset; box-sizing: border-box;
+        position: absolute; top: 7px; right: 7px;
+        width: 26px; height: 26px;
+        background: var(--bg); border: 1px solid var(--border);
+        border-radius: var(--rs);
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; color: var(--muted);
+        transition: color .15s, border-color .15s, background .15s;
+      }
+      .copy-icon-btn:hover { background: var(--hover); color: var(--text); }
+      .copy-icon-btn.copied { color: #16a34a; border-color: #86efac; background: #f0fdf4; }
+
+      .copy-svg-btn {
+        all: unset; box-sizing: border-box;
+        display: flex; align-items: center; justify-content: center;
+        width: 28px; height: 28px;
+        border: 1px solid var(--border); border-radius: var(--rs);
+        cursor: pointer; color: var(--muted);
+        transition: color .15s, border-color .15s, background .15s;
+        flex-shrink: 0;
+      }
+      .copy-svg-btn:hover { background: var(--hover); color: var(--text); }
+      .copy-svg-btn.copied { color: #16a34a; border-color: #86efac; background: #f0fdf4; }
 
       .btn {
         all: unset; box-sizing: border-box;
@@ -400,6 +425,11 @@ const iconData = icons.map(({ name, cats, hasSolid, outlineSvg, solidSvg }) => (
           <div class="sheet-icon" id="sheetIcon"></div>
           <div class="sheet-name" id="sheetName"></div>
           <div class="sheet-cats" id="sheetCats"></div>
+          <button class="copy-svg-btn" id="copySvg" aria-label="Copy SVG">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+          </button>
           <div class="variant-toggle" id="variantToggle">
             <button class="var-btn active" data-var="outline">Outline</button>
             <button class="var-btn" data-var="solid">Solid</button>
@@ -409,25 +439,25 @@ const iconData = icons.map(({ name, cats, hasSolid, outlineSvg, solidSvg }) => (
           <div class="tabs">
             <button class="tab active" data-tab="web">Web</button>
             <button class="tab" data-tab="wc">Web Component</button>
-            <button class="tab" data-tab="svg">SVG</button>
           </div>
           <div class="panel active" id="panelWeb">
-            <pre class="code-block" id="codeWeb"></pre>
-            <div class="code-actions">
-              <button class="btn" id="copyWeb">Copy</button>
+            <div class="code-wrap">
+              <pre class="code-block" id="codeWeb"></pre>
+              <button class="copy-icon-btn" id="copyWeb" aria-label="Copy code">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+              </button>
             </div>
           </div>
           <div class="panel" id="panelWc">
-            <pre class="code-block" id="codeWc"></pre>
-            <div class="code-actions">
-              <button class="btn" id="copyWc">Copy</button>
-            </div>
-          </div>
-          <div class="panel" id="panelSvg">
-            <pre class="code-block" id="codeSvg"></pre>
-            <div class="code-actions">
-              <button class="btn" id="copySvg">Copy SVG</button>
-              <button class="btn btn-dark" id="downloadSvg">↓ Download SVG</button>
+            <div class="code-wrap">
+              <pre class="code-block" id="codeWc"></pre>
+              <button class="copy-icon-btn" id="copyWc" aria-label="Copy code">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -544,7 +574,7 @@ const iconData = icons.map(({ name, cats, hasSolid, outlineSvg, solidSvg }) => (
           ? `<lui-${icon.name} solid></lui-${icon.name}>`
           : `<lui-${icon.name}></lui-${icon.name}>`;
 
-        document.getElementById('codeSvg').textContent = rawSvg;
+        // SVG stored on currentIcon for copy button in left column
       }
 
       function openSheet(index, card) {
@@ -620,7 +650,6 @@ const iconData = icons.map(({ name, cats, hasSolid, outlineSvg, solidSvg }) => (
         document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
         document.getElementById('panelWeb').classList.toggle('active', name === 'web');
         document.getElementById('panelWc').classList.toggle('active', name === 'wc');
-        document.getElementById('panelSvg').classList.toggle('active', name === 'svg');
       }
 
       document.querySelectorAll('.tab').forEach((tab) => {
@@ -630,10 +659,8 @@ const iconData = icons.map(({ name, cats, hasSolid, outlineSvg, solidSvg }) => (
       // ── Copy ──
       function copyText(text, btn) {
         navigator.clipboard.writeText(text).then(() => {
-          const orig = btn.textContent;
-          btn.textContent = 'Copied!';
           btn.classList.add('copied');
-          setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1800);
+          setTimeout(() => btn.classList.remove('copied'), 1800);
         });
       }
 
@@ -644,19 +671,10 @@ const iconData = icons.map(({ name, cats, hasSolid, outlineSvg, solidSvg }) => (
         copyText(document.getElementById('codeWc').textContent, e.currentTarget);
       });
       document.getElementById('copySvg').addEventListener('click', (e) => {
-        copyText(document.getElementById('codeSvg').textContent, e.currentTarget);
-      });
-
-      // ── Download ──
-      document.getElementById('downloadSvg').addEventListener('click', () => {
         if (!currentIcon) return;
         const isSolid = activeVariant === 'solid' && currentIcon.hasSolid;
         const svg = isSolid ? currentIcon.solidSvg : currentIcon.outlineSvg;
-        const filename = isSolid ? `${currentIcon.name}-solid.svg` : `${currentIcon.name}.svg`;
-        const blob = new Blob([svg], { type: 'image/svg+xml' });
-        const url = URL.createObjectURL(blob);
-        Object.assign(document.createElement('a'), { href: url, download: filename }).click();
-        URL.revokeObjectURL(url);
+        copyText(svg, e.currentTarget);
       });
     </script>
   </body>

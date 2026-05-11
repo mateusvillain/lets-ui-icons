@@ -219,54 +219,65 @@ const iconData = icons.map(({ name, cats, hasSolid, outlineSvg, solidSvg }) => (
       }
       .no-results.visible { display: block; }
 
-      /* ── Modal ── */
-      dialog {
-        width: calc(100% - 32px);
-        max-width: 460px;
-        max-height: 88vh;
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 0;
-        box-shadow: 0 24px 60px rgba(0,0,0,.14);
-        overflow: hidden;
-      }
-      dialog[open] { display: flex; flex-direction: column; }
-      dialog::backdrop { background: rgba(0,0,0,.35); backdrop-filter: blur(3px); }
+      .icon-card.selected { border-color: var(--text); }
 
-      .modal-header {
-        display: flex; align-items: center; justify-content: space-between;
-        padding: 14px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+      /* ── Bottom sheet ── */
+      .sheet {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: var(--bg);
+        border-top: 1px solid var(--border);
+        border-radius: 16px 16px 0 0;
+        box-shadow: 0 -8px 32px rgba(0,0,0,.1);
+        transform: translateY(100%);
+        transition: transform .3s cubic-bezier(.32,.72,0,1);
+        z-index: 50;
       }
-      .modal-title { font-weight: 600; font-size: 13.5px; letter-spacing: -.01em; }
-      .modal-cats { font-size: 11px; color: var(--muted); margin-top: 1px; text-transform: capitalize; }
+      .sheet.open { transform: translateY(0); }
 
-      .modal-close {
+      .sheet-top {
+        display: flex; align-items: center; justify-content: center;
+        padding: 10px 16px 0; position: relative;
+      }
+      .sheet-handle {
+        width: 36px; height: 4px;
+        background: var(--border); border-radius: 2px;
+      }
+      .sheet-close {
         all: unset; box-sizing: border-box;
+        position: absolute; right: 16px; top: 8px;
         width: 26px; height: 26px; background: var(--hover);
         border-radius: var(--rs); display: flex; align-items: center;
         justify-content: center; cursor: pointer; color: var(--muted);
-        flex-shrink: 0; transition: background .15s, color .15s;
-        font-size: 12px;
+        font-size: 12px; transition: background .15s, color .15s;
       }
-      .modal-close:hover { background: var(--border); color: var(--text); }
+      .sheet-close:hover { background: var(--border); color: var(--text); }
 
-      .modal-preview {
-        padding: 28px 20px 20px;
-        display: flex; flex-direction: column; align-items: center; gap: 14px;
-        background: var(--bg-subtle); border-bottom: 1px solid var(--border);
-        flex-shrink: 0;
+      .sheet-layout {
+        display: flex; gap: 0;
+        height: 188px;
       }
-      .modal-icon { color: #111827; }
-      .modal-icon svg { width: 48px; height: 48px; display: block; }
+
+      .sheet-left {
+        width: 172px; flex-shrink: 0;
+        display: flex; flex-direction: column; align-items: center;
+        justify-content: center; gap: 8px;
+        padding: 12px 16px; border-right: 1px solid var(--border);
+      }
+      .sheet-icon { color: #111827; }
+      .sheet-icon svg { width: 40px; height: 40px; display: block; }
+      .sheet-name { font-weight: 600; font-size: 12.5px; letter-spacing: -.01em; text-align: center; }
+      .sheet-cats { font-size: 11px; color: var(--muted); text-transform: capitalize; text-align: center; }
 
       .variant-toggle {
         display: flex; gap: 2px;
         background: var(--border); padding: 2px; border-radius: 999px;
+        margin-top: 2px;
       }
       .var-btn {
         all: unset; box-sizing: border-box;
-        padding: 4px 14px; border-radius: 999px;
-        font-size: 12px; cursor: pointer; color: var(--muted);
+        padding: 3px 12px; border-radius: 999px;
+        font-size: 11.5px; cursor: pointer; color: var(--muted);
         transition: all .15s; font-family: inherit;
       }
       .var-btn.active {
@@ -274,41 +285,42 @@ const iconData = icons.map(({ name, cats, hasSolid, outlineSvg, solidSvg }) => (
         font-weight: 500; box-shadow: 0 1px 2px rgba(0,0,0,.1);
       }
 
-      .modal-body { overflow-y: auto; flex: 1; }
+      .sheet-right { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
-      .tabs { display: flex; padding: 0 18px; border-bottom: 1px solid var(--border); }
+      .tabs { display: flex; padding: 0 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
       .tab {
         all: unset; box-sizing: border-box;
-        padding: 11px 2px; margin-right: 18px;
+        padding: 10px 2px; margin-right: 16px;
         border-bottom: 2px solid transparent;
-        font-size: 13px; color: var(--muted);
+        font-size: 12.5px; color: var(--muted);
         cursor: pointer; transition: all .15s;
         white-space: nowrap; font-family: inherit;
       }
       .tab.active { color: var(--text); border-bottom-color: var(--text); font-weight: 500; }
 
-      .panel { padding: 16px 18px; display: none; }
-      .panel.active { display: block; }
+      .panel { padding: 12px 16px; display: none; flex-direction: column; gap: 10px; flex: 1; }
+      .panel.active { display: flex; }
 
       .code-block {
         background: var(--bg-subtle);
         border: 1px solid var(--border);
         border-radius: var(--rs);
-        padding: 12px 14px;
+        padding: 10px 12px;
         font-family: 'SF Mono', 'Fira Code', 'Fira Mono', Consolas, monospace;
-        font-size: 12.5px; line-height: 1.6;
+        font-size: 12px; line-height: 1.55;
         white-space: pre-wrap; word-break: break-all;
-        color: var(--text);
+        color: var(--text); overflow-y: auto;
+        flex: 1;
       }
 
-      .code-actions { margin-top: 10px; display: flex; justify-content: flex-end; gap: 8px; }
+      .code-actions { display: flex; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
 
       .btn {
         all: unset; box-sizing: border-box;
         display: inline-flex; align-items: center; gap: 5px;
-        padding: 6px 13px;
+        padding: 5px 12px;
         border: 1px solid var(--border); border-radius: var(--rs);
-        font-size: 12.5px; background: var(--bg); color: var(--text);
+        font-size: 12px; background: var(--bg); color: var(--text);
         cursor: pointer; transition: all .15s; font-family: inherit;
         white-space: nowrap;
       }
@@ -377,49 +389,50 @@ const iconData = icons.map(({ name, cats, hasSolid, outlineSvg, solidSvg }) => (
       </div>
     </main>
 
-    <!-- Modal -->
-    <dialog id="modal">
-      <div class="modal-header">
-        <div>
-          <div class="modal-title" id="modalTitle"></div>
-          <div class="modal-cats" id="modalCats"></div>
-        </div>
-        <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+    <!-- Bottom sheet -->
+    <div class="sheet" id="sheet" aria-hidden="true">
+      <div class="sheet-top">
+        <div class="sheet-handle"></div>
+        <button class="sheet-close" id="sheetClose" aria-label="Close">✕</button>
       </div>
-      <div class="modal-preview">
-        <div class="modal-icon" id="modalIcon"></div>
-        <div class="variant-toggle" id="variantToggle">
-          <button class="var-btn active" data-var="outline">Outline</button>
-          <button class="var-btn" data-var="solid">Solid</button>
-        </div>
-      </div>
-      <div class="modal-body">
-        <div class="tabs">
-          <button class="tab active" data-tab="web">Web</button>
-          <button class="tab" data-tab="wc">Web Component</button>
-          <button class="tab" data-tab="svg">SVG</button>
-        </div>
-        <div class="panel active" id="panelWeb">
-          <pre class="code-block" id="codeWeb"></pre>
-          <div class="code-actions">
-            <button class="btn" id="copyWeb">Copy</button>
+      <div class="sheet-layout">
+        <div class="sheet-left">
+          <div class="sheet-icon" id="sheetIcon"></div>
+          <div class="sheet-name" id="sheetName"></div>
+          <div class="sheet-cats" id="sheetCats"></div>
+          <div class="variant-toggle" id="variantToggle">
+            <button class="var-btn active" data-var="outline">Outline</button>
+            <button class="var-btn" data-var="solid">Solid</button>
           </div>
         </div>
-        <div class="panel" id="panelWc">
-          <pre class="code-block" id="codeWc"></pre>
-          <div class="code-actions">
-            <button class="btn" id="copyWc">Copy</button>
+        <div class="sheet-right">
+          <div class="tabs">
+            <button class="tab active" data-tab="web">Web</button>
+            <button class="tab" data-tab="wc">Web Component</button>
+            <button class="tab" data-tab="svg">SVG</button>
           </div>
-        </div>
-        <div class="panel" id="panelSvg">
-          <pre class="code-block" id="codeSvg"></pre>
-          <div class="code-actions">
-            <button class="btn" id="copySvg">Copy SVG</button>
-            <button class="btn btn-dark" id="downloadSvg">↓ Download SVG</button>
+          <div class="panel active" id="panelWeb">
+            <pre class="code-block" id="codeWeb"></pre>
+            <div class="code-actions">
+              <button class="btn" id="copyWeb">Copy</button>
+            </div>
+          </div>
+          <div class="panel" id="panelWc">
+            <pre class="code-block" id="codeWc"></pre>
+            <div class="code-actions">
+              <button class="btn" id="copyWc">Copy</button>
+            </div>
+          </div>
+          <div class="panel" id="panelSvg">
+            <pre class="code-block" id="codeSvg"></pre>
+            <div class="code-actions">
+              <button class="btn" id="copySvg">Copy SVG</button>
+              <button class="btn btn-dark" id="downloadSvg">↓ Download SVG</button>
+            </div>
           </div>
         </div>
       </div>
-    </dialog>
+    </div>
 
     <!-- Icon data for client JS -->
     <script type="application/json" id="icon-data" set:html={JSON.stringify(iconData)} />
@@ -432,13 +445,17 @@ const iconData = icons.map(({ name, cats, hasSolid, outlineSvg, solidSvg }) => (
       let searchQuery = '';
       let activeVariant = 'outline';
       let currentIcon = null;
+      let selectedCard = null;
 
       // ── Elements ──
       const grid = document.getElementById('grid');
       const cards = [...grid.querySelectorAll('.icon-card')];
       const noResults = document.getElementById('noResults');
       const resultsCount = document.getElementById('resultsCount');
-      const modal = document.getElementById('modal');
+      const sheet = document.getElementById('sheet');
+      const main = document.querySelector('.main');
+
+      const SHEET_HEIGHT = 216; // px — keep in sync with .sheet-layout height + top bar
 
       // ── Filter ──
       function applyFilter() {
@@ -498,89 +515,107 @@ const iconData = icons.map(({ name, cats, hasSolid, outlineSvg, solidSvg }) => (
         sizeValue.textContent = px + 'px';
       });
 
-      // ── Modal ──
+      // ── Sheet ──
       function toDisplaySvg(svg) {
         if (!svg) return '';
         return svg.replace('<svg', '<svg fill="currentColor"');
       }
 
-      function setStyleAttr(el, styles) {
-        Object.assign(el.style, styles);
-      }
-
-      function updateModalContent() {
+      function updateSheetContent() {
         const icon = currentIcon;
         if (!icon) return;
 
         const isSolid = activeVariant === 'solid' && icon.hasSolid;
         const rawSvg = isSolid ? icon.solidSvg : icon.outlineSvg;
-        const displaySvg = toDisplaySvg(rawSvg);
 
-        // Preview
-        const modalIcon = document.getElementById('modalIcon');
-        modalIcon.innerHTML = displaySvg;
-        const svgEl = modalIcon.querySelector('svg');
-        if (svgEl) setStyleAttr(svgEl, { width: '48px', height: '48px', display: 'block' });
+        const sheetIcon = document.getElementById('sheetIcon');
+        sheetIcon.innerHTML = toDisplaySvg(rawSvg);
+        const svgEl = sheetIcon.querySelector('svg');
+        if (svgEl) Object.assign(svgEl.style, { width: '40px', height: '40px', display: 'block' });
 
-        // Code — Web
-        const webCode = isSolid
+        document.getElementById('sheetName').textContent = icon.name;
+        document.getElementById('sheetCats').textContent = icon.cats.join(', ');
+
+        document.getElementById('codeWeb').textContent = isSolid
           ? `<i class="lui-solid lui-${icon.name}"></i>`
           : `<i class="lui lui-${icon.name}"></i>`;
-        document.getElementById('codeWeb').textContent = webCode;
 
-        // Code — Web Component
-        const wcCode = isSolid
+        document.getElementById('codeWc').textContent = isSolid
           ? `<lui-${icon.name} solid></lui-${icon.name}>`
           : `<lui-${icon.name}></lui-${icon.name}>`;
-        document.getElementById('codeWc').textContent = wcCode;
 
-        // Code — SVG
         document.getElementById('codeSvg').textContent = rawSvg;
       }
 
-      function openModal(index) {
+      function openSheet(index, card) {
+        const isAlreadyOpen = sheet.classList.contains('open');
+
+        // Update selected card highlight
+        if (selectedCard) selectedCard.classList.remove('selected');
+        selectedCard = card;
+        card.classList.add('selected');
+
         currentIcon = icons[index];
         activeVariant = 'outline';
 
-        // Reset variant buttons
         document.querySelectorAll('.var-btn').forEach((b) => {
           b.classList.toggle('active', b.dataset.var === 'outline');
         });
-
-        // Show/hide variant toggle
         document.getElementById('variantToggle').style.display =
           currentIcon.hasSolid ? 'flex' : 'none';
 
-        // Title + categories
-        document.getElementById('modalTitle').textContent = currentIcon.name;
-        document.getElementById('modalCats').textContent = currentIcon.cats.join(', ');
-
-        // Reset to first tab
         activateTab('web');
+        updateSheetContent();
 
-        updateModalContent();
-        modal.showModal();
+        if (!isAlreadyOpen) {
+          sheet.classList.add('open');
+          sheet.removeAttribute('aria-hidden');
+          main.style.paddingBottom = SHEET_HEIGHT + 'px';
+        }
+      }
+
+      function closeSheet() {
+        sheet.classList.remove('open');
+        sheet.setAttribute('aria-hidden', 'true');
+        main.style.paddingBottom = '';
+        if (selectedCard) {
+          selectedCard.classList.remove('selected');
+          selectedCard = null;
+        }
+        currentIcon = null;
       }
 
       cards.forEach((card) => {
-        card.addEventListener('click', () => openModal(Number(card.dataset.index)));
+        card.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openSheet(Number(card.dataset.index), card);
+        });
       });
 
-      // Close
-      document.getElementById('modalClose').addEventListener('click', () => modal.close());
-      modal.addEventListener('click', (e) => { if (e.target === modal) modal.close(); });
+      // Close on outside click
+      document.addEventListener('click', (e) => {
+        if (!sheet.classList.contains('open')) return;
+        if (!sheet.contains(e.target)) closeSheet();
+      });
 
-      // Variant
+      // Close on Escape
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeSheet();
+      });
+
+      document.getElementById('sheetClose').addEventListener('click', closeSheet);
+
+      // ── Variant ──
       document.querySelectorAll('.var-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
           document.querySelectorAll('.var-btn').forEach((b) => b.classList.remove('active'));
           btn.classList.add('active');
           activeVariant = btn.dataset.var;
-          updateModalContent();
+          updateSheetContent();
         });
       });
 
-      // Tabs
+      // ── Tabs ──
       function activateTab(name) {
         document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
         document.getElementById('panelWeb').classList.toggle('active', name === 'web');
@@ -592,16 +627,13 @@ const iconData = icons.map(({ name, cats, hasSolid, outlineSvg, solidSvg }) => (
         tab.addEventListener('click', () => activateTab(tab.dataset.tab));
       });
 
-      // Copy helper
+      // ── Copy ──
       function copyText(text, btn) {
         navigator.clipboard.writeText(text).then(() => {
           const orig = btn.textContent;
           btn.textContent = 'Copied!';
           btn.classList.add('copied');
-          setTimeout(() => {
-            btn.textContent = orig;
-            btn.classList.remove('copied');
-          }, 1800);
+          setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1800);
         });
       }
 
@@ -615,7 +647,7 @@ const iconData = icons.map(({ name, cats, hasSolid, outlineSvg, solidSvg }) => (
         copyText(document.getElementById('codeSvg').textContent, e.currentTarget);
       });
 
-      // Download SVG
+      // ── Download ──
       document.getElementById('downloadSvg').addEventListener('click', () => {
         if (!currentIcon) return;
         const isSolid = activeVariant === 'solid' && currentIcon.hasSolid;
@@ -623,8 +655,7 @@ const iconData = icons.map(({ name, cats, hasSolid, outlineSvg, solidSvg }) => (
         const filename = isSolid ? `${currentIcon.name}-solid.svg` : `${currentIcon.name}.svg`;
         const blob = new Blob([svg], { type: 'image/svg+xml' });
         const url = URL.createObjectURL(blob);
-        const a = Object.assign(document.createElement('a'), { href: url, download: filename });
-        a.click();
+        Object.assign(document.createElement('a'), { href: url, download: filename }).click();
         URL.revokeObjectURL(url);
       });
     </script>

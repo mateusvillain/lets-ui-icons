@@ -20,7 +20,7 @@ if (!FILE_ID || !TOKEN) {
    PATHS
 ========================= */
 
-const RAW_DIR = 'icons/raw';
+const RAW_DIR = 'src/icons';
 const OUT_DIR = 'dist/icons';
 
 const headers = {

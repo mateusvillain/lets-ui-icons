@@ -32,9 +32,11 @@
     "dist"
   ],
   "scripts": {
+    "pull": "node scripts/pull-icons.js",
     "optimize": "npx svgo -f dist/icons -r",
     "build:icons": "node scripts/build-icons.js",
-    "build": "npm run optimize && npm run build:icons"
+    "build": "pnpm pull && pnpm optimize && pnpm build:icons",
+    "clean": "rm -rf dist"
   },
   "lint-staged": {
     "*.{js,ts,css,json,md}": [

@@ -1,5 +1,5 @@
 {
-  "name": "@lets-ui/docs",
+  "name": "@lets-ui-icons/docs",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,7 +8,7 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "@lets-ui/icons": "workspace:*"
+    "@lets-ui-icons/icons": "workspace:*"
   },
   "devDependencies": {
     "astro": "^5.0.0"

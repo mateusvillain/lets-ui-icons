@@ -57,31 +57,31 @@
     "x-logo",
     "youtube-logo"
   ],
-  "symbols": [
-    "alert-circle",
-    "alert-triangle",
+  "math": ["divide", "minus", "plus"],
+  "people": ["user", "user-circle"],
+  "shapes": [
     "bars-2",
     "bars-3",
-    "check",
-    "check-circle",
-    "divide",
     "dots-nine",
     "dots-three-horizontal",
-    "dots-three-vertical",
+    "dots-three-vertical"
+  ],
+  "system": [
+    "alert-circle",
+    "alert-triangle",
+    "check",
+    "check-circle",
     "info-circle",
     "link-external",
-    "minus",
-    "moon",
-    "plus",
-    "sun",
+    "trash",
+    "x",
+    "x-circle"
+  ],
+  "typography": [
     "text-align-center",
     "text-align-justify",
     "text-align-left",
-    "text-align-right",
-    "trash",
-    "user",
-    "user-circle",
-    "x",
-    "x-circle"
-  ]
+    "text-align-right"
+  ],
+  "weather": ["moon", "sun"]
 }

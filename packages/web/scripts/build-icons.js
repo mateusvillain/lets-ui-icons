@@ -60,16 +60,21 @@ async function run() {
   const categories = JSON.parse(await fs.readFile(CATEGORIES_FILE, 'utf8'));
   const baseCss = await fs.readFile(BASE_CSS_SRC, 'utf8');
 
-  const iconToCategory = {};
+  const iconCategories = {};
   for (const [cat, list] of Object.entries(categories)) {
-    for (const name of list) iconToCategory[name] = cat;
+    for (const name of list) {
+      if (!iconCategories[name]) iconCategories[name] = [];
+      iconCategories[name].push(cat);
+    }
   }
 
   const grouped = {};
   for (const [name, variants] of Object.entries(allIcons)) {
-    const cat = iconToCategory[name] ?? 'misc';
-    if (!grouped[cat]) grouped[cat] = {};
-    grouped[cat][name] = variants;
+    const cats = iconCategories[name] ?? ['misc'];
+    for (const cat of cats) {
+      if (!grouped[cat]) grouped[cat] = {};
+      grouped[cat][name] = variants;
+    }
   }
 
   // base.css — shared rules only

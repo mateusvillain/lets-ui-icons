@@ -28,3 +28,7 @@ Thumbs.db
 .cache/
 .nyc_output/
 coverage/
+.claude/
+
+# Generated files
+packages/icons/categories.json

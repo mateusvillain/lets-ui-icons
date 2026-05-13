@@ -1,0 +1,63 @@
+name: New Icon Request
+description: Request a new icon to be added to the library.
+title: "[Icon] "
+labels: ["icon request"]
+body:
+  - type: input
+    id: name
+    attributes:
+      label: Icon name
+      description: Suggested name in kebab-case (e.g. `arrow-down`, `user-circle`).
+      placeholder: icon-name
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: Which category best fits this icon?
+      options:
+        - arrows
+        - brands
+        - math
+        - people
+        - shapes
+        - system
+        - typography
+        - weather
+        - misc
+        - New category (describe below)
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: variants
+    attributes:
+      label: Variants needed
+      options:
+        - label: Outline
+        - label: Solid
+
+  - type: textarea
+    id: usage
+    attributes:
+      label: Use case
+      description: Where and how would this icon be used?
+      placeholder: This icon would be used to represent…
+    validations:
+      required: true
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Links to similar icons in other libraries (Phosphor, Heroicons, etc.) or images.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and this icon has not been requested yet.
+          required: true

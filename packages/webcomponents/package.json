@@ -1,0 +1,45 @@
+{
+  "name": "@lets-ui/icons-webcomponents",
+  "version": "1.0.0",
+  "description": "Web Components icon library for the Let's UI design system.",
+  "keywords": [
+    "design",
+    "system",
+    "icons",
+    "web-components",
+    "custom-elements"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mateusvillain/lets-ui-icons.git",
+    "directory": "packages/webcomponents"
+  },
+  "bugs": {
+    "url": "https://github.com/mateusvillain/lets-ui-icons/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Mateus Villain",
+    "email": "mateus@mateusvillain.com",
+    "url": "https://mateusvillain.com"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": "./dist/index.js",
+    "./*": "./dist/*.js"
+  },
+  "scripts": {
+    "build": "node scripts/build-webcomponents.js",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@lets-ui-icons/icons": "workspace:*"
+  },
+  "devDependencies": {
+    "fs-extra": "^11.3.3"
+  }
+}

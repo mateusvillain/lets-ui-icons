@@ -321,8 +321,11 @@ const iconData = icons.map(
       .icon-label {
         font-size: 10.5px;
         color: var(--muted);
-        word-break: break-all;
         line-height: 1.35;
+        width: 100%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
       }
 
       .no-results {

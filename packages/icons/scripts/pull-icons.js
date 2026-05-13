@@ -36,27 +36,43 @@ async function getFile() {
   return res.json();
 }
 
-async function getNode(nodeId) {
-  const res = await fetch(
-    `https://api.figma.com/v1/files/${FILE_ID}/nodes?ids=${encodeURIComponent(
-      nodeId
-    )}`,
-    { headers }
-  );
-  const data = await res.json();
-  const entry = Object.values(data.nodes || {})[0];
-  return entry?.document || null;
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function exportSVGBatch(nodeIds = []) {
+async function exportSVGBatch(nodeIds = [], chunkSize = 25) {
   if (!nodeIds.length) return {};
-  const ids = nodeIds.join(',');
-  const res = await fetch(
-    `https://api.figma.com/v1/images/${FILE_ID}?ids=${ids}&format=svg`,
-    { headers }
-  );
-  const data = await res.json();
-  return data.images || {};
+  const results = {};
+  for (let i = 0; i < nodeIds.length; i += chunkSize) {
+    const chunk = nodeIds.slice(i, i + chunkSize);
+    const ids = chunk.join(',');
+
+    let delay = 3000;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      if (attempt > 0) {
+        console.log(
+          `  ⏳ Rate limit — aguardando ${delay / 1000}s antes de tentar novamente...`
+        );
+        await sleep(delay);
+        delay *= 2;
+      }
+      const res = await fetch(
+        `https://api.figma.com/v1/images/${FILE_ID}?ids=${ids}&format=svg`,
+        { headers }
+      );
+      const data = await res.json();
+      if (data.err) {
+        console.warn(`⚠️ Figma API error: ${data.err}`);
+        if (attempt < 3) continue;
+      } else {
+        Object.assign(results, data.images || {});
+      }
+      break;
+    }
+
+    if (i + chunkSize < nodeIds.length) await sleep(1000);
+  }
+  return results;
 }
 
 /* =========================
@@ -88,27 +104,47 @@ async function run() {
   const allComponents = file.components || {};
 
   const categories = {};
-  const variantComponentIds = new Set();
+
+  // Split components into variants (have componentSetId) and standalone (don't)
+  const variantsBySet = {};
+  const standaloneComponents = [];
+
+  for (const [id, comp] of Object.entries(allComponents)) {
+    if (comp.componentSetId) {
+      if (!variantsBySet[comp.componentSetId])
+        variantsBySet[comp.componentSetId] = [];
+      variantsBySet[comp.componentSetId].push({ id, name: comp.name });
+    } else {
+      standaloneComponents.push([id, comp]);
+    }
+  }
+
+  const totalVariants = Object.values(variantsBySet).reduce(
+    (s, v) => s + v.length,
+    0
+  );
+  console.log(
+    `\n📦 ${totalVariants} variantes em ${Object.keys(variantsBySet).length} sets | ${standaloneComponents.length} standalone`
+  );
+
+  // Export all IDs in a single batch pass to minimise API calls
+  const allIds = Object.keys(allComponents);
+  console.log(`⟳ Exportando ${allIds.length} componentes...\n`);
+  const allImagesMap = await exportSVGBatch(allIds);
 
   /* ── Component Sets (variants: outline / solid) ── */
 
-  for (const [setNodeId, set] of Object.entries(componentSets)) {
+  for (const [setId, variants] of Object.entries(variantsBySet)) {
+    const set = componentSets[setId];
+    if (!set) continue;
+
     const { name: baseName, category } = parseName(set.name);
-    const setNode = await getNode(setNodeId);
-    if (!setNode) continue;
 
-    const children = (setNode.children || []).filter((c) => c?.id);
-    if (!children.length) continue;
-
-    children.forEach((c) => variantComponentIds.add(c.id));
-
-    const imagesMap = await exportSVGBatch(children.map((c) => c.id));
-
-    for (const child of children) {
-      const url = imagesMap[child.id];
+    for (const variant of variants) {
+      const url = allImagesMap[variant.id];
       if (!url) continue;
 
-      const style = getStyleFromName(child.name);
+      const style = getStyleFromName(variant.name);
       const fileName =
         style === 'outline' ? `${baseName}.svg` : `${baseName}-${style}.svg`;
 
@@ -125,29 +161,19 @@ async function run() {
 
   /* ── Standalone components (no variants) ── */
 
-  const standaloneComponents = Object.entries(allComponents).filter(
-    ([id]) => !variantComponentIds.has(id)
-  );
+  for (const [id, comp] of standaloneComponents) {
+    const url = allImagesMap[id];
+    if (!url) continue;
 
-  if (standaloneComponents.length) {
-    const imagesMap = await exportSVGBatch(
-      standaloneComponents.map(([id]) => id)
-    );
+    const { name: baseName, category } = parseName(comp.name);
+    const svg = await fetch(url).then((r) => r.text());
+    const optimized = optimize(svg, svgoConfig).data;
 
-    for (const [id, comp] of standaloneComponents) {
-      const url = imagesMap[id];
-      if (!url) continue;
+    await fs.writeFile(`${OUT_DIR}/${baseName}.svg`, optimized);
+    console.log(`✔ ${baseName} (standalone)`);
 
-      const { name: baseName, category } = parseName(comp.name);
-      const svg = await fetch(url).then((r) => r.text());
-      const optimized = optimize(svg, svgoConfig).data;
-
-      await fs.writeFile(`${OUT_DIR}/${baseName}.svg`, optimized);
-      console.log(`✔ ${baseName} (standalone)`);
-
-      if (!categories[category]) categories[category] = new Set();
-      categories[category].add(baseName);
-    }
+    if (!categories[category]) categories[category] = new Set();
+    categories[category].add(baseName);
   }
 
   /* ── Generate categories.json ── */
@@ -159,7 +185,7 @@ async function run() {
   );
 
   await fs.writeFile(CATEGORIES_FILE, JSON.stringify(output, null, 2) + '\n');
-  console.log('✅ Ícones exportados com sucesso');
+  console.log('\n✅ Ícones exportados com sucesso');
 }
 
 run().catch((err) => {

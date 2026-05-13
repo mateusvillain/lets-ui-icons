@@ -79,11 +79,10 @@ body {
   align-items: center;
   justify-content: center;
   aspect-ratio: 1;
-  cursor: grab;
+  cursor: pointer;
   border-radius: 4px;
   color: var(--figma-color-text);
   transition: background-color 0.1s;
-  -webkit-user-drag: element;
   user-select: none;
 }
 
@@ -93,7 +92,6 @@ body {
 
 .icon-cell:active {
   background-color: var(--figma-color-bg-pressed);
-  cursor: grabbing;
 }
 
 .icon-cell svg {

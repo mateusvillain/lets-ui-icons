@@ -4,7 +4,7 @@ import { h } from 'preact'
 import { useMemo, useState } from 'preact/hooks'
 import '!./styles.css'
 import { allBaseNames, categories, iconsData } from './icons-data'
-import type { ClearDragHandler, InsertIconHandler, StartDragHandler } from './types'
+import type { InsertIconHandler } from './types'
 
 const brandNames = new Set(categories.brand)
 
@@ -16,7 +16,7 @@ function getIconKey(baseName: string, isSolid: boolean): string {
 function Plugin() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isSolid, setIsSolid] = useState(false)
-  const [showBrand, setShowBrand] = useState(true)
+  const [showBrand, setShowBrand] = useState(false)
 
   const filteredIcons = useMemo(() => {
     const q = searchQuery.toLowerCase().trim()
@@ -30,23 +30,6 @@ function Plugin() {
   function handleClick(baseName: string) {
     const key = getIconKey(baseName, isSolid)
     emit<InsertIconHandler>('INSERT_ICON', { iconName: key, svgString: iconsData[key] })
-  }
-
-  function handleDragStart(
-    e: h.JSX.TargetedDragEvent<HTMLDivElement>,
-    baseName: string
-  ) {
-    const key = getIconKey(baseName, isSolid)
-    const svgString = iconsData[key]
-    if (e.dataTransfer) {
-      e.dataTransfer.effectAllowed = 'copy'
-      e.dataTransfer.setData('text/plain', key)
-    }
-    emit<StartDragHandler>('START_DRAG', { iconName: key, svgString })
-  }
-
-  function handleDragEnd() {
-    emit<ClearDragHandler>('CLEAR_DRAG')
   }
 
   return (
@@ -98,11 +81,8 @@ function Plugin() {
               <div
                 key={key}
                 class="icon-cell"
-                draggable
                 title={key}
                 onClick={() => handleClick(baseName)}
-                onDragStart={(e) => handleDragStart(e, baseName)}
-                onDragEnd={handleDragEnd}
                 dangerouslySetInnerHTML={{ __html: svg }}
               />
             )

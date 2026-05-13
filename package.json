@@ -13,9 +13,9 @@
     "url": "https://mateusvillain.com"
   },
   "scripts": {
-    "pull": "pnpm --filter @lets-ui-icons/icons pull",
-    "build": "pnpm --filter @lets-ui-icons/icons build && pnpm --filter @lets-ui-icons/web build && pnpm --filter @lets-ui-icons/webcomponents build",
-    "dev": "pnpm --filter @lets-ui-icons/docs dev",
+    "pull": "pnpm --filter @lets-ui/icons pull",
+    "build": "pnpm --filter @lets-ui/icons build && pnpm --filter @lets-ui/icons-web build && pnpm --filter @lets-ui/icons-webcomponents build",
+    "dev": "pnpm --filter docs dev",
     "clean": "pnpm -r clean"
   },
   "lint-staged": {

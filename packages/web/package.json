@@ -37,7 +37,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@lets-ui-icons/icons": "workspace:*"
+    "@lets-ui/icons": "workspace:*"
   },
   "devDependencies": {
     "fs-extra": "^11.3.3"

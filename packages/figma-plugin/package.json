@@ -1,0 +1,39 @@
+{
+  "name": "lets-ui-icons-figma-plugin",
+  "version": "1.0.0",
+  "description": "Let's UI Icons Figma Plugin",
+  "scripts": {
+    "prebuild": "node scripts/generate-icons.js",
+    "build": "build-figma-plugin --typecheck",
+    "prewatch": "node scripts/generate-icons.js",
+    "watch": "build-figma-plugin --watch",
+    "lint": "eslint ."
+  },
+  "figma-plugin": {
+    "id": "1636366289172454724",
+    "name": "Let's UI Icons",
+    "api": "1.0.0",
+    "editorType": [
+      "figma"
+    ],
+    "main": "src/main.ts",
+    "ui": "src/ui.tsx",
+    "documentAccess": "dynamic-page",
+    "networkAccess": {
+      "allowedDomains": [
+        "none"
+      ]
+    }
+  },
+  "devDependencies": {
+    "@create-figma-plugin/build": "^3.0.0",
+    "@create-figma-plugin/tsconfig": "^3.0.0",
+    "@figma/plugin-typings": "*",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@create-figma-plugin/ui": "^3.0.0",
+    "@create-figma-plugin/utilities": "^3.0.0",
+    "preact": "^10.0.0"
+  }
+}

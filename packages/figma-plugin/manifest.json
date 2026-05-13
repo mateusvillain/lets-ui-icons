@@ -1,0 +1,12 @@
+{
+  "api": "1.0.0",
+  "editorType": ["figma"],
+  "id": "1636366289172454724",
+  "name": "Let's UI Icons",
+  "main": "build/main.js",
+  "ui": "build/ui.js",
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["none"]
+  }
+}

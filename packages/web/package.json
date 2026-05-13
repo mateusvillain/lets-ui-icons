@@ -1,6 +1,6 @@
 {
-  "name": "@lets-ui-icons/web",
-  "version": "0.1.0",
+  "name": "@lets-ui/icons-web",
+  "version": "1.0.0",
   "description": "CSS icon library for the Let's UI design system.",
   "keywords": [
     "design",

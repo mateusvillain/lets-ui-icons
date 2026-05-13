@@ -1,0 +1,83 @@
+name: Bug Report
+description: Report a problem with an icon or the library packages.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: package
+    attributes:
+      label: Affected package
+      options:
+        - "@lets-ui/icons (SVG files)"
+        - "@lets-ui/web (CSS)"
+        - "@lets-ui/webcomponents"
+        - docs site
+        - build / pull script
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear description of what the bug is.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Install @lets-ui/web
+        2. Import arrows.css
+        3. …
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Package version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser, Node version, bundler, framework — whatever is relevant.
+      placeholder: |
+        - Browser: Chrome 124
+        - Node: 20.x
+        - Framework: Astro 5
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Screenshots, code snippets, or anything else that might help.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and this bug has not been reported yet.
+          required: true

@@ -1,0 +1,93 @@
+{
+  "arrows": [
+    "arrow-down",
+    "arrow-left",
+    "arrow-right",
+    "arrow-top",
+    "arrow-u-up-left",
+    "arrow-u-up-right",
+    "caret-down",
+    "caret-down-circle",
+    "caret-left",
+    "caret-left-circle",
+    "caret-right",
+    "caret-right-circle",
+    "caret-top",
+    "caret-top-circle"
+  ],
+  "directory": [
+    "file",
+    "file-minus",
+    "file-plus",
+    "folder",
+    "folder-minus",
+    "folder-plus",
+    "folder-simple",
+    "folder-simple-minus",
+    "folder-simple-plus"
+  ],
+  "math": [
+    "minus",
+    "minus-circle",
+    "plus",
+    "plus-circle"
+  ],
+  "people": [
+    "user",
+    "user-circle"
+  ],
+  "place": [
+    "house"
+  ],
+  "security": [
+    "lock",
+    "lock-open",
+    "shield",
+    "shield-check",
+    "shield-plus",
+    "shield-slash",
+    "shield-star"
+  ],
+  "shapes": [
+    "bars-three",
+    "bars-two",
+    "dot",
+    "dots-nine",
+    "dots-six-horizontal",
+    "dots-six-vertical",
+    "dots-three-horizontal",
+    "dots-three-vertical"
+  ],
+  "system": [
+    "bell",
+    "bell-muted",
+    "bell-ringing",
+    "bell-slash",
+    "calendar",
+    "calendar-check",
+    "calendar-minus",
+    "calendar-plus",
+    "calendar-x",
+    "caution",
+    "caution-circle",
+    "check",
+    "check-circle",
+    "copy",
+    "download",
+    "exclamation",
+    "floppy-disk",
+    "info",
+    "info-circle",
+    "link-external",
+    "magnifying-glass",
+    "trash",
+    "upload",
+    "x",
+    "x-circle"
+  ],
+  "weather": [
+    "cloud",
+    "moon",
+    "sun"
+  ]
+}

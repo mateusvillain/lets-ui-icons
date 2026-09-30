@@ -34,6 +34,7 @@
   },
   "scripts": {
     "pull": "node scripts/pull-icons.js",
+    "pull:penpot": "node scripts/pull-icons-penpot.js",
     "optimize": "svgo -f dist -r",
     "build": "pnpm pull && pnpm optimize",
     "clean": "rm -rf dist"

@@ -5,6 +5,9 @@ node_modules/
 dist/
 build/
 
+# Committed icons (deploy source)
+!packages/icons/dist/
+
 # Logs
 npm-debug.log*
 yarn-debug.log*
@@ -31,5 +34,5 @@ coverage/
 .claude/
 
 # Generated files
-packages/icons/categories.json
+packages/icons/.penpot-export/
 packages/docs/.astro/

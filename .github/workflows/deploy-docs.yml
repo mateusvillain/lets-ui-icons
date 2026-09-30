@@ -32,7 +32,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      # Icons committed in packages/icons/dist (pnpm pull:penpot or pnpm pull)
+      # take precedence; Figma is only a fallback when none are committed.
       - name: Pull icons from Figma
+        if: hashFiles('packages/icons/dist/*.svg') == ''
         run: pnpm --filter @lets-ui/icons pull
         env:
           FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}

@@ -2,10 +2,12 @@
   "arrows": [
     "arrow-down",
     "arrow-left",
+    "arrow-left-right",
     "arrow-right",
-    "arrow-top",
     "arrow-u-up-left",
     "arrow-u-up-right",
+    "arrow-up",
+    "arrow-up-down",
     "caret-down",
     "caret-down-circle",
     "caret-left",

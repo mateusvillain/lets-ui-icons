@@ -14,8 +14,9 @@
        Gravar em packages/icons/.penpot-export/manifest.json e NN.json.
     4. pnpm --filter @lets-ui/icons pull:penpot
 
-  Cada ícone é uma variante de componente: nome "categoria/nome" e
-  propriedade `style` = outline | solid.
+  Cada ícone é uma variante de componente com propriedade `style` =
+  outline | solid. A categoria vem do nome ("categoria/nome") ou do
+  path do componente (name "nome", path "categoria").
 */
 
 const BATCH_SIZE = 15;
@@ -132,7 +133,8 @@ const state = {
 storage.penpotExport = {
   async exportBatch() {
     for (const v of state.queue.splice(0, BATCH_SIZE)) {
-      const label = `${v.name} (${v.variantProps?.style})`;
+      const name = v.path ? `${v.path}/${v.name}` : v.name;
+      const label = `${name} (${v.variantProps?.style})`;
       if (!['outline', 'solid'].includes(v.variantProps?.style)) {
         state.errors.push(`${label}: variante sem style outline/solid`);
         continue;
@@ -140,7 +142,7 @@ storage.penpotExport = {
       try {
         const raw = decode(await v.mainInstance().export({ type: 'svg' }));
         const svg = cleanPenpotSvg(raw);
-        state.icons.push({ name: v.name, style: v.variantProps?.style, svg, hash: hash(svg) });
+        state.icons.push({ name, style: v.variantProps?.style, svg, hash: hash(svg) });
       } catch (err) {
         state.errors.push(`${label}: ${err.message}`);
       }

@@ -25,12 +25,10 @@
   },
   "type": "module",
   "files": [
-    "dist",
-    "categories.json"
+    "dist"
   ],
   "exports": {
-    "./package.json": "./package.json",
-    "./categories.json": "./categories.json"
+    "./package.json": "./package.json"
   },
   "scripts": {
     "pull": "node scripts/pull-icons.js",

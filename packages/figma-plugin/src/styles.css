@@ -31,18 +31,15 @@ body {
   font-family: var(--font-stack);
 }
 
-.variant-toggle,
-.brand-toggle {
+.variant-toggle {
   display: flex;
 }
 
-.variant-toggle span,
-.brand-toggle span {
+.variant-toggle span {
   margin-top: 1px;
 }
 
-.variant-toggle span:first-child,
-.brand-toggle span:first-child {
+.variant-toggle span:first-child {
   margin-right: 6px;
 }
 

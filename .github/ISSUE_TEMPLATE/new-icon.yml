@@ -12,25 +12,6 @@ body:
     validations:
       required: true
 
-  - type: dropdown
-    id: category
-    attributes:
-      label: Category
-      description: Which category best fits this icon?
-      options:
-        - arrows
-        - brands
-        - math
-        - people
-        - shapes
-        - system
-        - typography
-        - weather
-        - misc
-        - New category (describe below)
-    validations:
-      required: true
-
   - type: checkboxes
     id: variants
     attributes:

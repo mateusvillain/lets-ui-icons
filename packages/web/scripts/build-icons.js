@@ -8,7 +8,6 @@ const ICONS_PKG_DIR = path.dirname(
   require.resolve('@lets-ui/icons/package.json')
 );
 const ICONS_SRC = path.join(ICONS_PKG_DIR, 'dist');
-const CATEGORIES_FILE = path.join(ICONS_PKG_DIR, 'categories.json');
 const ICONS_DEST = 'dist/icons';
 const BASE_CSS_SRC = 'src/styles/base.css';
 const OUT_DIR = 'dist';
@@ -57,40 +56,14 @@ async function run() {
     if (fixed !== svg) await fs.writeFile(filePath, fixed);
   }
 
-  const categories = JSON.parse(await fs.readFile(CATEGORIES_FILE, 'utf8'));
   const baseCss = await fs.readFile(BASE_CSS_SRC, 'utf8');
-
-  const iconCategories = {};
-  for (const [cat, list] of Object.entries(categories)) {
-    for (const name of list) {
-      if (!iconCategories[name]) iconCategories[name] = [];
-      iconCategories[name].push(cat);
-    }
-  }
-
-  const grouped = {};
-  for (const [name, variants] of Object.entries(allIcons)) {
-    const cats = iconCategories[name] ?? ['misc'];
-    for (const cat of cats) {
-      if (!grouped[cat]) grouped[cat] = {};
-      grouped[cat][name] = variants;
-    }
-  }
 
   // base.css — shared rules only
   await fs.writeFile(path.join(OUT_DIR, 'base.css'), HEADER + baseCss);
 
-  // {category}.css — base + icons for that category
-  for (const [cat, icons] of Object.entries(grouped)) {
-    const content =
-      (HEADER + baseCss + '\n' + iconRules(icons)).trimEnd() + '\n';
-    await fs.writeFile(path.join(OUT_DIR, `${cat}.css`), content);
-    console.log(`✔ ${cat}.css (${Object.keys(icons).length} icons)`);
-  }
-
   // index.css — base + all icons
-  const allRules = Object.values(grouped).map(iconRules).join('');
-  const index = (HEADER + baseCss + '\n' + allRules).trimEnd() + '\n';
+  const index =
+    (HEADER + baseCss + '\n' + iconRules(allIcons)).trimEnd() + '\n';
   await fs.writeFile(path.join(OUT_DIR, 'index.css'), index);
 
   console.log('✅ Successfully generated');

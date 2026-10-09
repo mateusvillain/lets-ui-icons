@@ -25,9 +25,9 @@
 
 ## Icons added
 
-| Name        | Category | Outline | Solid |
-| ----------- | -------- | :-----: | :---: |
-| `icon-name` | category |   ✅    |  ✅   |
+| Name        | Outline | Solid |
+| ----------- | :-----: | :---: |
+| `icon-name` |   ✅    |  ✅   |
 
 **Figma source:** <!-- link to the component in Figma -->
 
@@ -38,4 +38,4 @@
 - [ ] `pnpm build` runs without errors
 - [ ] New icons appear correctly in the docs (`pnpm dev` inside `packages/docs`)
 - [ ] Icon names are in kebab-case and follow the existing naming convention
-- [ ] `categories.json` was regenerated (via `pnpm pull`)
+- [ ] SVGs in `packages/icons/dist` were regenerated (via `pnpm pull`)

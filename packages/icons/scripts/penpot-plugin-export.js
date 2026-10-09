@@ -15,8 +15,8 @@
     4. pnpm --filter @lets-ui/icons pull:penpot
 
   Cada ícone é uma variante de componente com propriedade `style` =
-  outline | solid. A categoria vem do nome ("categoria/nome") ou do
-  path do componente (name "nome", path "categoria").
+  outline | solid. Pastas no nome ou no path do componente são ignoradas
+  pelo pull-icons-penpot.js — vale só o nome do ícone.
 */
 
 const BATCH_SIZE = 15;

@@ -6,9 +6,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const iconsPkgDir = dirname(require.resolve('@lets-ui/icons/package.json'));
 const iconsDistDir = join(iconsPkgDir, 'dist');
-const categoriesPath = join(iconsPkgDir, 'categories.json');
 
-const categories = JSON.parse(await readFile(categoriesPath, 'utf8'));
 const svgFiles = (await readdir(iconsDistDir)).filter((f) =>
   f.endsWith('.svg')
 );
@@ -22,14 +20,6 @@ for (const file of svgFiles) {
   iconMap[name][isSolid ? 'solid' : 'outline'] = content;
 }
 
-const iconToCategories: Record<string, string[]> = {};
-for (const [cat, names] of Object.entries(categories) as [string, string[]][]) {
-  for (const name of names) {
-    if (!iconToCategories[name]) iconToCategories[name] = [];
-    iconToCategories[name].push(cat);
-  }
-}
-
 function toDisplaySvg(svg: string) {
   return svg.replace('<svg', '<svg fill="currentColor"');
 }
@@ -38,18 +28,15 @@ const icons = Object.entries(iconMap)
   .sort(([a], [b]) => a.localeCompare(b))
   .map(([name, variants]) => ({
     name,
-    cats: iconToCategories[name] ?? ['misc'],
     hasSolid: !!variants.solid,
     outlineDisplay: toDisplaySvg(variants.outline ?? ''),
     outlineSvg: variants.outline ?? '',
     solidSvg: variants.solid ?? '',
   }));
 
-const allCategories = Object.keys(categories).sort();
 const iconData = icons.map(
-  ({ name, cats, hasSolid, outlineSvg, solidSvg }) => ({
+  ({ name, hasSolid, outlineSvg, solidSvg }) => ({
     name,
-    cats,
     hasSolid,
     outlineSvg,
     solidSvg,
@@ -158,39 +145,9 @@ const iconData = icons.map(
         padding: 10px 24px;
         display: flex;
         align-items: center;
+        justify-content: flex-end;
         gap: 16px;
         flex-wrap: wrap;
-      }
-
-      .cats {
-        display: flex;
-        gap: 5px;
-        flex-wrap: wrap;
-        flex: 1;
-        min-width: 0;
-      }
-
-      .cat-btn {
-        padding: 4px 11px;
-        border: 1px solid var(--border);
-        border-radius: 999px;
-        font-size: 12px;
-        background: none;
-        color: var(--muted);
-        cursor: pointer;
-        transition: all 0.15s;
-        text-transform: capitalize;
-        white-space: nowrap;
-        font-family: inherit;
-      }
-      .cat-btn:hover {
-        border-color: #9ca3af;
-        color: var(--text);
-      }
-      .cat-btn.active {
-        background: var(--text);
-        border-color: var(--text);
-        color: #fff;
       }
 
       .tools {
@@ -431,12 +388,6 @@ const iconData = icons.map(
         letter-spacing: -0.01em;
         text-align: center;
       }
-      .sheet-cats {
-        font-size: 11px;
-        color: var(--muted);
-        text-transform: capitalize;
-        text-align: center;
-      }
 
       .variant-toggle {
         display: flex;
@@ -631,16 +582,6 @@ const iconData = icons.map(
   <body>
     <!-- Controls -->
     <div class="controls">
-      <div class="cats">
-        <button class="cat-btn active" data-cat="all">All</button>
-        {
-          allCategories.map((cat) => (
-            <button class="cat-btn" data-cat={cat}>
-              {cat}
-            </button>
-          ))
-        }
-      </div>
       <div class="tools">
         <div class="tool-group">
           <span class="tool-label">Color</span>
@@ -701,7 +642,6 @@ const iconData = icons.map(
               class="icon-card"
               data-index={i}
               data-name={icon.name}
-              data-cats={icon.cats.join(',')}
             >
               <div class="icon-svg">
                 <Fragment set:html={icon.outlineDisplay} />
@@ -725,7 +665,6 @@ const iconData = icons.map(
         <div class="sheet-left">
           <div class="sheet-icon" id="sheetIcon"></div>
           <div class="sheet-name" id="sheetName"></div>
-          <div class="sheet-cats" id="sheetCats"></div>
           <button class="copy-svg-btn" id="copySvg" aria-label="Copy SVG">
             <svg
               width="14"
@@ -811,7 +750,6 @@ const iconData = icons.map(
       );
 
       // ── State ──
-      let activeCategory = 'all';
       let searchQuery = '';
       let activeVariant = 'outline';
       let currentIcon = null;
@@ -833,12 +771,7 @@ const iconData = icons.map(
         let visible = 0;
 
         for (const card of cards) {
-          const matchesCat =
-            activeCategory === 'all' ||
-            card.dataset.cats.split(',').includes(activeCategory);
-          const matchesSearch = !q || card.dataset.name.includes(q);
-
-          if (matchesCat && matchesSearch) {
+          if (!q || card.dataset.name.includes(q)) {
             card.classList.remove('hidden');
             visible++;
           } else {
@@ -849,18 +782,6 @@ const iconData = icons.map(
         noResults.classList.toggle('visible', visible === 0);
         resultsCount.textContent = `${visible} icon${visible === 1 ? '' : 's'}`;
       }
-
-      // ── Category ──
-      document.querySelectorAll('.cat-btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          document
-            .querySelectorAll('.cat-btn')
-            .forEach((b) => b.classList.remove('active'));
-          btn.classList.add('active');
-          activeCategory = btn.dataset.cat;
-          applyFilter();
-        });
-      });
 
       // ── Search ──
       let searchTimer;
@@ -914,7 +835,6 @@ const iconData = icons.map(
           });
 
         document.getElementById('sheetName').textContent = icon.name;
-        document.getElementById('sheetCats').textContent = icon.cats.join(', ');
 
         document.getElementById('codeWeb').textContent = isSolid
           ? `<i class="lui-solid lui-${icon.name}"></i>`

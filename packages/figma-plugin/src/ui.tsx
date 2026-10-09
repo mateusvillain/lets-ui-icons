@@ -3,10 +3,8 @@ import { emit } from '@create-figma-plugin/utilities'
 import { h } from 'preact'
 import { useMemo, useState } from 'preact/hooks'
 import '!./styles.css'
-import { allBaseNames, categories, iconsData } from './icons-data'
+import { allBaseNames, iconsData } from './icons-data'
 import type { InsertIconHandler } from './types'
-
-const brandNames = new Set(categories.brand)
 
 function getIconKey(baseName: string, isSolid: boolean): string {
   const solidKey = `${baseName}-solid`
@@ -16,16 +14,11 @@ function getIconKey(baseName: string, isSolid: boolean): string {
 function Plugin() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isSolid, setIsSolid] = useState(false)
-  const [showBrand, setShowBrand] = useState(false)
 
   const filteredIcons = useMemo(() => {
     const q = searchQuery.toLowerCase().trim()
-    return allBaseNames.filter((name) => {
-      if (!showBrand && brandNames.has(name)) return false
-      if (q && !name.includes(q)) return false
-      return true
-    })
-  }, [searchQuery, showBrand])
+    return q ? allBaseNames.filter((name) => name.includes(q)) : allBaseNames
+  }, [searchQuery])
 
   function handleClick(baseName: string) {
     const key = getIconKey(baseName, isSolid)
@@ -55,17 +48,6 @@ function Plugin() {
             >
               Solid
             </span>
-          </div>
-
-          <div class="brand-toggle">
-            <span
-              class={`toggle-label ${showBrand ? 'toggle-label--active' : 'toggle-label--inactive'}`}
-            >
-              Brand
-            </span>
-            <Toggle onValueChange={setShowBrand} value={showBrand}>
-              {''}
-            </Toggle>
           </div>
         </div>
       </div>

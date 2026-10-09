@@ -8,7 +8,6 @@ const ICONS_PKG_DIR = path.dirname(
   require.resolve('@lets-ui/icons/package.json')
 );
 const ICONS_SRC = path.join(ICONS_PKG_DIR, 'dist');
-const CATEGORIES_FILE = path.join(ICONS_PKG_DIR, 'categories.json');
 const OUT_DIR = 'dist';
 const COMPONENTS_DIR = path.join(OUT_DIR, 'components');
 
@@ -59,45 +58,12 @@ async function run() {
     allIcons[name][isSolid ? 'solid' : 'outline'] = svg;
   }
 
-  const categories = JSON.parse(await fs.readFile(CATEGORIES_FILE, 'utf8'));
-
-  const iconCategories = {};
-  for (const [cat, list] of Object.entries(categories)) {
-    for (const name of list) {
-      if (!iconCategories[name]) iconCategories[name] = [];
-      iconCategories[name].push(cat);
-    }
-  }
-
   // One JS module per icon — SVG lives here and only here
   for (const [name, variants] of Object.entries(allIcons)) {
     await fs.writeFile(
       path.join(COMPONENTS_DIR, `${name}.js`),
       componentModule(name, variants)
     );
-  }
-
-  // Group icon names by category
-  const grouped = {};
-  for (const name of Object.keys(allIcons)) {
-    const cats = iconCategories[name] ?? ['misc'];
-    for (const cat of cats) {
-      if (!grouped[cat]) grouped[cat] = [];
-      grouped[cat].push(name);
-    }
-  }
-
-  // {category}.js — imports only its components
-  const categoryNames = Object.keys(grouped);
-  for (const cat of categoryNames) {
-    const imports = grouped[cat]
-      .map((name) => `import './components/${name}.js';`)
-      .join('\n');
-    await fs.writeFile(
-      path.join(OUT_DIR, `${cat}.js`),
-      HEADER + imports + '\n'
-    );
-    console.log(`✔ ${cat}.js (${grouped[cat].length} icons)`);
   }
 
   // index.js — imports every component directly

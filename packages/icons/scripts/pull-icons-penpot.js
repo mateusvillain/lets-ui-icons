@@ -3,7 +3,7 @@ import { optimize } from 'svgo';
 import svgoConfig from '../svgo.config.js';
 
 /*
-  Gera dist/ + categories.json a partir dos ícones exportados do Penpot,
+  Gera dist/ a partir dos ícones exportados do Penpot,
   no mesmo formato do pull-icons.js (Figma).
 
   O Penpot não permite exportar SVG com access token, então a exportação
@@ -22,7 +22,6 @@ import svgoConfig from '../svgo.config.js';
 
 const EXPORT_DIR = '.penpot-export';
 const OUT_DIR = 'dist';
-const CATEGORIES_FILE = 'categories.json';
 const STYLES = ['outline', 'solid'];
 
 /* =========================
@@ -39,13 +38,9 @@ function hash(text) {
   return (h >>> 0).toString(16).padStart(8, '0');
 }
 
-// "arrows/arrow-down" → { category: "arrows", name: "arrow-down" }
-// "arrow-down"        → { category: "misc",   name: "arrow-down" }
+// Ignora pastas no nome: "arrows/arrow-down" → "arrow-down"
 function parseName(raw) {
-  const parts = raw.split('/');
-  const name = parts[parts.length - 1];
-  const category = parts.length > 1 ? parts[0] : 'misc';
-  return { name, category };
+  return raw.split('/').pop();
 }
 
 /* =========================
@@ -114,35 +109,19 @@ async function run() {
     `\n📦 ${icons.length} ícones de "${manifest.file.name}" (${manifest.exportedAt})`
   );
 
-  const categories = {};
-
   // Export completo: limpa o dist para não sobrar ícone renomeado/removido
   await fs.emptyDir(OUT_DIR);
 
   for (const icon of icons) {
-    const { name, category } = parseName(icon.name);
+    const name = parseName(icon.name);
     const fileName =
       icon.style === 'outline' ? `${name}.svg` : `${name}-${icon.style}.svg`;
 
     const optimized = optimize(icon.svg, svgoConfig).data;
     await fs.writeFile(`${OUT_DIR}/${fileName}`, optimized);
-
-    if (!categories[category]) categories[category] = new Set();
-    categories[category].add(name);
   }
 
-  /* ── Generate categories.json ── */
-
-  const output = Object.fromEntries(
-    Object.entries(categories)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([cat, names]) => [cat, [...names].sort()])
-  );
-
-  await fs.writeFile(CATEGORIES_FILE, JSON.stringify(output, null, 2) + '\n');
-  console.log(
-    `✅ ${icons.length} SVGs em ${OUT_DIR}/ | ${Object.keys(output).length} categorias em ${CATEGORIES_FILE}`
-  );
+  console.log(`✅ ${icons.length} SVGs em ${OUT_DIR}/`);
 }
 
 run().catch((err) => {

@@ -21,7 +21,6 @@ if (!FILE_ID || !TOKEN) {
 ========================= */
 
 const OUT_DIR = 'dist';
-const CATEGORIES_FILE = 'categories.json';
 
 const headers = { 'X-Figma-Token': TOKEN };
 
@@ -79,13 +78,9 @@ async function exportSVGBatch(nodeIds = [], chunkSize = 25) {
    HELPERS
 ========================= */
 
-// "arrows/arrow-down" → { category: "arrows", name: "arrow-down" }
-// "arrow-down"        → { category: "misc",   name: "arrow-down" }
+// Ignora pastas no nome: "arrows/arrow-down" → "arrow-down"
 function parseName(raw) {
-  const parts = raw.split('/');
-  const name = parts[parts.length - 1];
-  const category = parts.length > 1 ? parts[0] : 'misc';
-  return { name, category };
+  return raw.split('/').pop();
 }
 
 function getStyleFromName(name = '') {
@@ -102,8 +97,6 @@ async function run() {
   const file = await getFile();
   const componentSets = file.componentSets || {};
   const allComponents = file.components || {};
-
-  const categories = {};
 
   // Split components into variants (have componentSetId) and standalone (don't)
   const variantsBySet = {};
@@ -138,7 +131,7 @@ async function run() {
     const set = componentSets[setId];
     if (!set) continue;
 
-    const { name: baseName, category } = parseName(set.name);
+    const baseName = parseName(set.name);
 
     for (const variant of variants) {
       const url = allImagesMap[variant.id];
@@ -154,9 +147,6 @@ async function run() {
       await fs.writeFile(`${OUT_DIR}/${fileName}`, optimized);
       console.log(`✔ ${baseName} (${style})`);
     }
-
-    if (!categories[category]) categories[category] = new Set();
-    categories[category].add(baseName);
   }
 
   /* ── Standalone components (no variants) ── */
@@ -165,26 +155,14 @@ async function run() {
     const url = allImagesMap[id];
     if (!url) continue;
 
-    const { name: baseName, category } = parseName(comp.name);
+    const baseName = parseName(comp.name);
     const svg = await fetch(url).then((r) => r.text());
     const optimized = optimize(svg, svgoConfig).data;
 
     await fs.writeFile(`${OUT_DIR}/${baseName}.svg`, optimized);
     console.log(`✔ ${baseName} (standalone)`);
-
-    if (!categories[category]) categories[category] = new Set();
-    categories[category].add(baseName);
   }
 
-  /* ── Generate categories.json ── */
-
-  const output = Object.fromEntries(
-    Object.entries(categories)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([cat, names]) => [cat, [...names].sort()])
-  );
-
-  await fs.writeFile(CATEGORIES_FILE, JSON.stringify(output, null, 2) + '\n');
   console.log('\n✅ Ícones exportados com sucesso');
 }
 

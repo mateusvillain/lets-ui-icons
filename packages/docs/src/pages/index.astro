@@ -63,7 +63,10 @@ const COLORS = [
     <script is:inline>
       // Resolve the theme before the first paint: saved choice, then the OS.
       (() => {
-        const saved = localStorage.getItem('lui-icons:theme');
+        let saved = null;
+        try {
+          saved = localStorage.getItem('lui-icons:theme');
+        } catch {}
         document.documentElement.dataset.theme =
           saved === 'light' || saved === 'dark'
             ? saved
@@ -477,18 +480,32 @@ const COLORS = [
       const page = $('page');
 
       // ── State ──
+      // Storage can be disabled or full; preferences then last for the visit.
       const store = {
-        get: (k: string) => localStorage.getItem(`lui-icons:${k}`),
-        set: (k: string, v: string) =>
-          localStorage.setItem(`lui-icons:${k}`, v),
+        get: (k: string) => {
+          try {
+            return localStorage.getItem(`lui-icons:${k}`);
+          } catch {
+            return null;
+          }
+        },
+        set: (k: string, v: string) => {
+          try {
+            localStorage.setItem(`lui-icons:${k}`, v);
+          } catch {}
+        },
       };
 
       // The grid style is global; the details panel keeps its own, so trying
       // a style there never changes the list.
       let variant: Variant = store.get('variant') === 'solid' ? 'solid' : 'outline';
       let detailVariant: Variant = variant;
-      let size = Number(store.get('size')) || 24;
-      let color = store.get('color') ?? ''; // '' = follows the text colour
+      // Saved values are untrusted: keep them within the slider and to hex.
+      const savedSize = Number(store.get('size'));
+      let size =
+        savedSize >= 16 && savedSize <= 64 && savedSize % 4 === 0 ? savedSize : 24;
+      const savedColor = store.get('color') ?? '';
+      let color = /^#[0-9a-f]{6}$/i.test(savedColor) ? savedColor : ''; // '' = follows the text colour
       let current: Icon | null = null;
       let usageTab: UsageTab = 'html';
 
@@ -508,6 +525,10 @@ const COLORS = [
       function rawSvg(icon: Icon, v: Variant = variant) {
         return v === 'solid' ? icon.solid : icon.outline;
       }
+
+      // Icons without a solid drawing export their outline.
+      const shownVariant = (icon: Icon, v: Variant): Variant =>
+        v === 'solid' && icon.hasSolid ? 'solid' : 'outline';
 
       function exportSvg(icon: Icon, v: Variant = variant) {
         const fill = color || 'currentColor';
@@ -800,7 +821,7 @@ const COLORS = [
           copy(
             exportSvg(current, detailVariant),
             'SVG copied',
-            `${current.name} · ${detailVariant} · ${size}px`
+            `${current.name} · ${shownVariant(current, detailVariant)} · ${size}px`
           );
       });
 
@@ -811,9 +832,10 @@ const COLORS = [
         });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `${current.name}${detailVariant === 'solid' ? '-solid' : ''}.svg`;
+        a.download = `${current.name}${shownVariant(current, detailVariant) === 'solid' ? '-solid' : ''}.svg`;
         a.click();
-        URL.revokeObjectURL(a.href);
+        // Revoking right away can cancel the download in Safari and Firefox.
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
         toast('SVG downloaded', a.download);
       });
 
@@ -825,7 +847,11 @@ const COLORS = [
         const icon = icons[Number(tile.dataset.index)];
 
         if (target.closest('.tile__copy')) {
-          copy(exportSvg(icon), 'SVG copied', `${icon.name} · ${variant} · ${size}px`);
+          copy(
+            exportSvg(icon),
+            'SVG copied',
+            `${icon.name} · ${shownVariant(icon, variant)} · ${size}px`
+          );
           return;
         }
         if (tile.classList.contains('is-selected')) closeDetails();

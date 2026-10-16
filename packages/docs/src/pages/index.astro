@@ -2,6 +2,8 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { createRequire } from 'node:module';
+import '@lets-ui/styles';
+import '../styles/icons.css';
 
 const require = createRequire(import.meta.url);
 const iconsPkgDir = dirname(require.resolve('@lets-ui/icons/package.json'));
@@ -20,948 +22,897 @@ for (const file of svgFiles) {
   iconMap[name][isSolid ? 'solid' : 'outline'] = content;
 }
 
-function toDisplaySvg(svg: string) {
-  return svg.replace('<svg', '<svg fill="currentColor"');
+function toDisplaySvg(svg = '') {
+  return svg.replace('<svg', '<svg fill="currentColor" aria-hidden="true"');
 }
 
 const icons = Object.entries(iconMap)
   .sort(([a], [b]) => a.localeCompare(b))
   .map(([name, variants]) => ({
     name,
+    outline: variants.outline ?? '',
+    // Icons without a solid drawing fall back to outline in solid mode.
+    solid: variants.solid ?? variants.outline ?? '',
     hasSolid: !!variants.solid,
-    outlineDisplay: toDisplaySvg(variants.outline ?? ''),
-    outlineSvg: variants.outline ?? '',
-    solidSvg: variants.solid ?? '',
   }));
 
-const iconData = icons.map(
-  ({ name, hasSolid, outlineSvg, solidSvg }) => ({
-    name,
-    hasSolid,
-    outlineSvg,
-    solidSvg,
-  })
-);
+// The page chrome is drawn with the set itself.
+const ui = (name: string, variant: 'outline' | 'solid' = 'outline') =>
+  toDisplaySvg(iconMap[name]?.[variant] ?? iconMap[name]?.outline);
+
+const COLORS = [
+  { value: '', label: 'Auto' },
+  { value: '#339bf0', label: 'Blue' },
+  { value: '#8b5cf6', label: 'Violet' },
+  { value: '#16a34a', label: 'Green' },
+  { value: '#f97316', label: 'Orange' },
+  { value: '#e11d48', label: 'Red' },
+];
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-brand="lets-ui" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Let's UI Icons</title>
-    <style is:global>
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-
-      :root {
-        --bg: #ffffff;
-        --bg-subtle: #f9fafb;
-        --border: #e5e7eb;
-        --text: #111827;
-        --muted: #6b7280;
-        --hover: #f3f4f6;
-        --r: 8px;
-        --rs: 6px;
-        font-family:
-          -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-        -webkit-font-smoothing: antialiased;
-      }
-
-      body {
-        background: var(--bg-subtle);
-        color: var(--text);
-        min-height: 100vh;
-      }
-
-      /* ── Header ── */
-      .header {
-        background: var(--bg);
-        border-bottom: 1px solid var(--border);
-        padding: 0 24px;
-        height: 60px;
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        position: sticky;
-        top: 0;
-        z-index: 20;
-      }
-
-      .logo {
-        font-size: 14px;
-        font-weight: 600;
-        flex-shrink: 0;
-        letter-spacing: -0.01em;
-      }
-      .logo-count {
-        font-weight: 400;
-        color: var(--muted);
-        font-size: 12px;
-        margin-left: 6px;
-      }
-
-      .search-wrap {
-        position: relative;
-        flex: 1;
-        margin-left: auto;
-        width: 100%;
-        padding-right: 16px;
-        margin-bottom: 16px;
-      }
-
-      .search-icon {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--muted);
-        pointer-events: none;
-        width: 18px;
-        height: 18px;
-      }
-      .search-input {
-        border: none;
-        width: 100%;
-        padding: 24px 32px;
-        font-size: 18px;
-        background: var(--bg-subtle);
-        outline: none;
-        color: var(--text);
-        font-family: inherit;
-      }
-      .search-input::placeholder {
-        color: var(--muted);
-      }
-
-      /* ── Controls ── */
-      .controls {
-        background: var(--bg);
-        border-bottom: 1px solid var(--border);
-        padding: 10px 24px;
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 16px;
-        flex-wrap: wrap;
-      }
-
-      .tools {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        flex-shrink: 0;
-      }
-      .tool-group {
-        display: flex;
-        align-items: center;
-        gap: 7px;
-      }
-      .tool-label {
-        font-size: 12px;
-        color: var(--muted);
-      }
-
-      .color-input {
-        width: 26px;
-        height: 26px;
-        padding: 3px;
-        border: 1px solid var(--border);
-        border-radius: var(--rs);
-        cursor: pointer;
-        background: none;
-        flex-shrink: 0;
-      }
-
-      input[type='range'] {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 96px;
-        height: 3px;
-        background: var(--border);
-        border-radius: 2px;
-        outline: none;
-        cursor: pointer;
-      }
-      input[type='range']::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 14px;
-        height: 14px;
-        background: var(--text);
-        border-radius: 50%;
-      }
-      input[type='range']::-moz-range-thumb {
-        width: 14px;
-        height: 14px;
-        background: var(--text);
-        border-radius: 50%;
-        border: none;
-      }
-      .size-value {
-        font-size: 12px;
-        color: var(--muted);
-        min-width: 34px;
-        text-align: right;
-        font-variant-numeric: tabular-nums;
-      }
-
-      /* ── Main ── */
-      .main {
-        padding: 20px 24px;
-        max-width: 1440px;
-        margin: 0 auto;
-      }
-      .results-count {
-        font-size: 12px;
-        color: var(--muted);
-        margin-bottom: 14px;
-      }
-
-      /* ── Grid ── */
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-        gap: 8px;
-      }
-
-      .icon-card {
-        all: unset;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-        padding: 18px 8px 13px;
-        border: 1px solid var(--border);
-        border-radius: var(--r);
-        background: var(--bg);
-        cursor: pointer;
-        transition:
-          border-color 0.15s,
-          box-shadow 0.15s,
-          transform 0.15s;
-        text-align: center;
-        width: 100%;
-      }
-      .icon-card:hover {
-        border-color: #9ca3af;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
-        transform: translateY(-1px);
-      }
-      .icon-card:focus-visible {
-        outline: 2px solid var(--text);
-        outline-offset: 2px;
-      }
-      .icon-card.hidden {
-        display: none;
-      }
-
-      .icon-svg {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--icon-color, #111827);
-      }
-      .icon-svg svg {
-        width: var(--icon-size, 24px);
-        height: var(--icon-size, 24px);
-        display: block;
-        transition:
-          width 0.1s,
-          height 0.1s;
-      }
-
-      .icon-label {
-        font-size: 10.5px;
-        color: var(--muted);
-        line-height: 1.35;
-        width: 100%;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-      }
-
-      .no-results {
-        grid-column: 1 / -1;
-        text-align: center;
-        padding: 80px 0;
-        color: var(--muted);
-        font-size: 14px;
-        display: none;
-      }
-      .no-results.visible {
-        display: block;
-      }
-
-      .icon-card.selected {
-        border-color: var(--text);
-      }
-
-      /* ── Bottom sheet ── */
-      .sheet {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: var(--bg);
-        border-top: 1px solid var(--border);
-        border-radius: 16px 16px 0 0;
-        box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.1);
-        transform: translateY(100%);
-        transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-        z-index: 50;
-      }
-      .sheet.open {
-        transform: translateY(0);
-      }
-
-      .sheet-top {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 10px 16px 0;
-        position: relative;
-      }
-      .sheet-handle {
-        width: 36px;
-        height: 4px;
-        background: var(--border);
-        border-radius: 2px;
-      }
-      .sheet-close {
-        all: unset;
-        box-sizing: border-box;
-        position: absolute;
-        right: 16px;
-        top: 8px;
-        width: 26px;
-        height: 26px;
-        background: var(--hover);
-        border-radius: var(--rs);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        color: var(--muted);
-        font-size: 12px;
-        transition:
-          background 0.15s,
-          color 0.15s;
-      }
-      .sheet-close:hover {
-        background: var(--border);
-        color: var(--text);
-      }
-
-      .sheet-layout {
-        display: flex;
-        gap: 0;
-        height: 188px;
-      }
-
-      .sheet-left {
-        width: 172px;
-        flex-shrink: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 12px 16px;
-        border-right: 1px solid var(--border);
-      }
-      .sheet-icon {
-        color: #111827;
-      }
-      .sheet-icon svg {
-        width: 40px;
-        height: 40px;
-        display: block;
-      }
-      .sheet-name {
-        font-weight: 600;
-        font-size: 12.5px;
-        letter-spacing: -0.01em;
-        text-align: center;
-      }
-
-      .variant-toggle {
-        display: flex;
-        gap: 2px;
-        background: var(--border);
-        padding: 2px;
-        border-radius: 999px;
-        margin-top: 2px;
-      }
-      .var-btn {
-        all: unset;
-        box-sizing: border-box;
-        padding: 3px 12px;
-        border-radius: 999px;
-        font-size: 11.5px;
-        cursor: pointer;
-        color: var(--muted);
-        transition: all 0.15s;
-        font-family: inherit;
-      }
-      .var-btn.active {
-        background: var(--bg);
-        color: var(--text);
-        font-weight: 500;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-      }
-
-      .sheet-right {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-      }
-
-      .tabs {
-        display: flex;
-        padding: 0 16px;
-        border-bottom: 1px solid var(--border);
-        flex-shrink: 0;
-      }
-      .tab {
-        all: unset;
-        box-sizing: border-box;
-        padding: 10px 2px;
-        margin-right: 16px;
-        border-bottom: 2px solid transparent;
-        font-size: 12.5px;
-        color: var(--muted);
-        cursor: pointer;
-        transition: all 0.15s;
-        white-space: nowrap;
-        font-family: inherit;
-      }
-      .tab.active {
-        color: var(--text);
-        border-bottom-color: var(--text);
-        font-weight: 500;
-      }
-
-      .panel {
-        padding: 12px 16px;
-        display: none;
-        flex-direction: column;
-        gap: 10px;
-        flex: 1;
-      }
-      .panel.active {
-        display: flex;
-      }
-
-      .code-block {
-        background: var(--bg-subtle);
-        border: 1px solid var(--border);
-        border-radius: var(--rs);
-        padding: 10px 12px;
-        font-family: 'SF Mono', 'Fira Code', 'Fira Mono', Consolas, monospace;
-        font-size: 12px;
-        line-height: 1.55;
-        white-space: pre-wrap;
-        word-break: break-all;
-        color: var(--text);
-        overflow-y: auto;
-        flex: 1;
-      }
-
-      .code-wrap {
-        position: relative;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .copy-icon-btn {
-        all: unset;
-        box-sizing: border-box;
-        position: absolute;
-        top: 7px;
-        right: 7px;
-        width: 26px;
-        height: 26px;
-        background: var(--bg);
-        border: 1px solid var(--border);
-        border-radius: var(--rs);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        color: var(--muted);
-        transition:
-          color 0.15s,
-          border-color 0.15s,
-          background 0.15s;
-      }
-      .copy-icon-btn:hover {
-        background: var(--hover);
-        color: var(--text);
-      }
-      .copy-icon-btn.copied {
-        color: #16a34a;
-        border-color: #86efac;
-        background: #f0fdf4;
-      }
-
-      .copy-svg-btn {
-        all: unset;
-        box-sizing: border-box;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 28px;
-        height: 28px;
-        border: 1px solid var(--border);
-        border-radius: var(--rs);
-        cursor: pointer;
-        color: var(--muted);
-        transition:
-          color 0.15s,
-          border-color 0.15s,
-          background 0.15s;
-        flex-shrink: 0;
-      }
-      .copy-svg-btn:hover {
-        background: var(--hover);
-        color: var(--text);
-      }
-      .copy-svg-btn.copied {
-        color: #16a34a;
-        border-color: #86efac;
-        background: #f0fdf4;
-      }
-
-      .btn {
-        all: unset;
-        box-sizing: border-box;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 5px 12px;
-        border: 1px solid var(--border);
-        border-radius: var(--rs);
-        font-size: 12px;
-        background: var(--bg);
-        color: var(--text);
-        cursor: pointer;
-        transition: all 0.15s;
-        font-family: inherit;
-        white-space: nowrap;
-      }
-      .btn:hover {
-        background: var(--hover);
-      }
-      .btn:focus-visible {
-        outline: 2px solid var(--text);
-        outline-offset: 2px;
-      }
-      .btn-dark {
-        background: var(--text);
-        color: #fff;
-        border-color: var(--text);
-      }
-      .btn-dark:hover {
-        opacity: 0.82;
-        background: var(--text);
-      }
-      .btn.copied {
-        color: #16a34a;
-        border-color: #86efac;
-        background: #f0fdf4;
-      }
-    </style>
+    <meta
+      name="description"
+      content="Open-source outline and solid SVG icons for the Let's UI design system."
+    />
+    <script is:inline>
+      // Resolve the theme before the first paint: saved choice, then the OS.
+      (() => {
+        const saved = localStorage.getItem('lui-icons:theme');
+        document.documentElement.dataset.theme =
+          saved === 'light' || saved === 'dark'
+            ? saved
+            : matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light';
+      })();
+    </script>
   </head>
   <body>
-    <!-- Controls -->
-    <div class="controls">
-      <div class="tools">
-        <div class="tool-group">
-          <span class="tool-label">Color</span>
-          <input
-            id="colorPicker"
-            class="color-input"
-            type="color"
-            value="#111827"
-            title="Icon color"
-          />
-        </div>
-        <div class="tool-group">
-          <span class="tool-label">Size</span>
-          <input
-            id="sizeSlider"
-            type="range"
-            min="16"
-            max="80"
-            step="8"
-            value="24"
-          />
-          <span class="size-value" id="sizeValue">24px</span>
-        </div>
-      </div>
-    </div>
+    <a class="skip-link" href="#search">Skip to icon search</a>
 
-    <!-- Grid -->
-    <main class="main">
-      <!-- Search -->
-      <div class="search-wrap">
-        <svg
-          class="search-icon"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-        >
-          <circle cx="11" cy="11" r="7"></circle><line
-            x1="16.5"
-            y1="16.5"
-            x2="22"
-            y2="22"></line>
-        </svg>
-        <input
-          id="search"
-          class="search-input"
-          type="search"
-          placeholder="Search icons…"
-          autocomplete="off"
-        />
-      </div>
-      <p class="results-count" id="resultsCount">{icons.length} icons</p>
-      <div class="grid" id="grid">
-        {
-          icons.map((icon, i) => (
-            <button
-              class="icon-card"
-              data-index={i}
-              data-name={icon.name}
-            >
-              <div class="icon-svg">
-                <Fragment set:html={icon.outlineDisplay} />
-              </div>
-              <span class="icon-label">{icon.name}</span>
-            </button>
-          ))
-        }
-        <div class="no-results" id="noResults">No icons found</div>
-      </div>
-    </main>
-
-    <!-- Bottom sheet -->
-    <div class="sheet" id="sheet" aria-hidden="true">
-      <div class="sheet-top">
-        <div class="sheet-handle"></div>
-        <button class="sheet-close" id="sheetClose" aria-label="Close">✕</button
-        >
-      </div>
-      <div class="sheet-layout">
-        <div class="sheet-left">
-          <div class="sheet-icon" id="sheetIcon"></div>
-          <div class="sheet-name" id="sheetName"></div>
-          <button class="copy-svg-btn" id="copySvg" aria-label="Copy SVG">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <rect x="9" y="9" width="13" height="13" rx="2"></rect><path
-                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+    <div class="page" id="page" data-variant="outline">
+      <!-- Top bar -->
+      <header class="topbar">
+        <a class="brand" href="/">
+          <span class="brand__name">Let's UI <strong>Icons</strong></span>
+        </a>
+        <div class="topbar__actions">
+          <a
+            class="icon-button icon-button--lg"
+            href="https://github.com/mateusvillain/lets-ui-icons"
+            target="_blank"
+            rel="noopener"
+            aria-label="GitHub repository (opens in a new tab)"
+            title="GitHub"
+          >
+            <svg viewBox="0 0 90 90" fill="currentColor" aria-hidden="true">
+              <path
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M44.6308 5.81738C22.5778 5.81738 4.75 23.7763 4.75 45.994C4.75 63.7538 16.1729 78.787 32.0194 84.1078C34.0006 84.5078 34.7263 83.2433 34.7263 82.1796C34.7263 81.2482 34.661 78.0556 34.661 74.7291C23.5671 77.1242 21.2569 69.9398 21.2569 69.9398C19.4741 65.2835 16.8324 64.0868 16.8324 64.0868C13.2014 61.6256 17.0969 61.6256 17.0969 61.6256C21.1247 61.8917 23.2382 65.7496 23.2382 65.7496C26.8031 71.8688 32.5476 70.1398 34.8586 69.0753C35.1884 66.4811 36.2455 64.6852 37.368 63.6876C28.5198 62.7562 19.2104 59.2975 19.2104 43.865C19.2104 39.4749 20.7941 35.8831 23.3035 33.0897C22.9076 32.0921 21.5206 27.9673 23.7002 22.4466C23.7002 22.4466 27.0676 21.3821 34.6602 26.5706C37.9109 25.6911 41.2633 25.2437 44.6308 25.24C47.9982 25.24 51.4308 25.7061 54.6006 26.5706C62.1941 21.3821 65.5614 22.4466 65.5614 22.4466C67.741 27.9673 66.3533 32.0921 65.9573 33.0897C68.5329 35.8831 70.0512 39.4749 70.0512 43.865C70.0512 59.2975 60.7418 62.6893 51.8276 63.6876C53.2806 64.9513 54.5345 67.3455 54.5345 71.1373C54.5345 76.525 54.4692 80.849 54.4692 82.1788C54.4692 83.2433 55.1957 84.5078 57.1761 84.1086C73.0227 78.7862 84.4455 63.7538 84.4455 45.994C84.5108 23.7763 66.6178 5.81738 44.6308 5.81738Z"
               ></path>
             </svg>
+          </a>
+          <button
+            type="button"
+            class="icon-button icon-button--lg"
+            id="themeToggle"
+            aria-label="Dark mode"
+            aria-pressed="false"
+            title="Dark mode"
+          >
+            <span class="theme-icon theme-icon--sun" set:html={ui('sun')} />
+            <span class="theme-icon theme-icon--moon" set:html={ui('moon')} />
           </button>
-          <div class="variant-toggle" id="variantToggle">
-            <button class="var-btn active" data-var="outline">Outline</button>
-            <button class="var-btn" data-var="solid">Solid</button>
-          </div>
         </div>
-        <div class="sheet-right">
-          <div class="tabs">
-            <button class="tab active" data-tab="web">Web</button>
-            <button class="tab" data-tab="wc">Web Component</button>
-          </div>
-          <div class="panel active" id="panelWeb">
-            <div class="code-wrap">
-              <pre class="code-block" id="codeWeb"></pre>
-              <button class="copy-icon-btn" id="copyWeb" aria-label="Copy code">
-                <svg
-                  width="13"
-                  height="13"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <rect x="9" y="9" width="13" height="13" rx="2"></rect><path
-                    d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
-                  ></path>
-                </svg>
+      </header>
+
+      <main class="main">
+      <!-- Hero -->
+      <section class="hero" aria-labelledby="heroTitle">
+        <p class="overtitle hero__eyebrow">Open-source icon set</p>
+        <h1 class="display hero__title" id="heroTitle">
+          Simple icons,<br />drawn on one grid.
+        </h1>
+        <p class="body--lg text--color-caption hero__lead">
+          Clean, consistent SVG icons for the Let's UI design system. Every icon
+          comes in outline and solid, ready for HTML, Web Components and Figma.
+        </p>
+        <ul class="hero__stats">
+          <li class="tag-md tag--md tag--surface-neutral tag--circle">
+            <strong>{icons.length}</strong> icons
+          </li>
+          <li class="tag-md tag--md tag--surface-neutral tag--circle">
+            <strong>2</strong> styles
+          </li>
+          <li class="tag-md tag--md tag--surface-neutral tag--circle">
+            <strong>24px</strong> grid
+          </li>
+          <li class="tag-md tag--md tag--surface-neutral tag--circle">MIT license</li>
+        </ul>
+      </section>
+
+      <!-- Toolbar -->
+      <div class="toolbar" id="toolbar">
+        <search class="search">
+          <span class="search__icon" set:html={ui('magnifying-glass')} />
+          <label class="sr-only" for="search">Search icons</label>
+          <input
+            id="search"
+            class="search__input"
+            type="search"
+            placeholder={`Search ${icons.length} icons…`}
+            autocomplete="off"
+            spellcheck="false"
+            aria-controls="grid"
+            aria-keyshortcuts="/ Control+K Meta+K"
+          />
+          <button
+            type="button"
+            class="close-button close-button--md search__clear"
+            id="searchClear"
+            aria-label="Clear search"
+            hidden
+            set:html={ui('x')}
+          />
+          <kbd class="shortcut search__hint" aria-hidden="true">
+            <span class="shortcut__key">/</span>
+          </kbd>
+        </search>
+
+        <div class="controls" role="group" aria-label="Display options">
+          <div class="tabs tabs--card">
+            <div
+              class="tabs__list"
+              role="radiogroup"
+              aria-label="Icon style"
+              id="variantGroup"
+            >
+              <button
+                type="button"
+                class="tab"
+                role="radio"
+                aria-checked="true"
+                data-variant="outline"
+              >
+                <span set:html={ui('shield-star')} />
+                Outline
+              </button>
+              <button
+                type="button"
+                class="tab"
+                role="radio"
+                aria-checked="false"
+                tabindex="-1"
+                data-variant="solid"
+              >
+                <span set:html={ui('shield-star', 'solid')} />
+                Solid
               </button>
             </div>
           </div>
-          <div class="panel" id="panelWc">
-            <div class="code-wrap">
-              <pre class="code-block" id="codeWc"></pre>
-              <button class="copy-icon-btn" id="copyWc" aria-label="Copy code">
-                <svg
-                  width="13"
-                  height="13"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <rect x="9" y="9" width="13" height="13" rx="2"></rect><path
-                    d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
-                  ></path>
-                </svg>
-              </button>
+
+          <div class="control control--size">
+            <label class="control__label" for="sizeSlider">Size</label>
+            <input
+              id="sizeSlider"
+              class="range"
+              type="range"
+              min="16"
+              max="64"
+              step="4"
+              value="24"
+              aria-valuetext="24 pixels"
+            />
+            <span class="control__value" id="sizeValue" aria-hidden="true"
+              >24px</span
+            >
+          </div>
+
+          <div class="control">
+            <span class="control__label" id="colorLabel">Color</span>
+            <div
+              class="swatches"
+              id="swatches"
+              role="radiogroup"
+              aria-labelledby="colorLabel"
+            >
+              {
+                COLORS.map(({ value, label }, i) => (
+                  <button
+                    type="button"
+                    class:list={['swatch', { 'swatch--auto': !value }]}
+                    role="radio"
+                    aria-checked={i === 0 ? 'true' : 'false'}
+                    tabindex={i === 0 ? undefined : '-1'}
+                    aria-label={value ? label : 'Auto (follows text color)'}
+                    title={label}
+                    data-color={value}
+                    style={value ? `--swatch: ${value}` : undefined}
+                  />
+                ))
+              }
             </div>
+            <label class="swatch swatch--custom" title="Custom color">
+              <span class="sr-only">Custom color</span>
+              <input id="colorPicker" type="color" value="#339bf0" />
+            </label>
+          </div>
+
+          <p class="controls__count" aria-hidden="true" id="resultsCount">
+            {icons.length} icons
+          </p>
+        </div>
+        <p class="sr-only" id="resultsLive" role="status"></p>
+      </div>
+
+      <!-- Grid -->
+      <section class="results" aria-labelledby="gridTitle">
+        <h2 class="sr-only" id="gridTitle">Icons</h2>
+        <ul class="grid" id="grid">
+          {
+            icons.map((icon, i) => (
+              <li
+                class="tile"
+                data-index={i}
+                data-name={icon.name}
+                style={`--i: ${Math.min(i, 40)}`}
+              >
+                <button
+                  type="button"
+                  class="tile__main"
+                  aria-expanded="false"
+                  aria-controls="details"
+                >
+                  <span class="tile__glyph">
+                    <span
+                      class="tile__svg tile__svg--outline"
+                      set:html={toDisplaySvg(icon.outline)}
+                    />
+                    <span
+                      class="tile__svg tile__svg--solid"
+                      set:html={toDisplaySvg(icon.solid)}
+                    />
+                  </span>
+                  <span class="tile__name">{icon.name}</span>
+                </button>
+                <button
+                  type="button"
+                  class="tile__copy"
+                  aria-label={`Copy ${icon.name} SVG`}
+                  title="Copy SVG"
+                  set:html={ui('copy')}
+                />
+              </li>
+            ))
+          }
+        </ul>
+
+        <div class="empty-state empty-state--align-center empty" id="empty" hidden>
+          <div class="empty__cover" set:html={ui('magnifying-glass')} />
+          <div class="empty-state__text">
+            <p class="empty-state__title">No icons found</p>
+            <p class="empty-state__description" id="emptyText">
+              Try a different keyword.
+            </p>
+          </div>
+          <button type="button" class="btn btn--md btn--neutral" id="emptyClear">
+            Clear search
+          </button>
+        </div>
+      </section>
+      </main>
+
+      <footer class="footer body--sm text--color-caption">
+        <span>Let's UI Icons · MIT License</span>
+        <a href="https://lets-ui.com" target="_blank" rel="noopener"
+          >Part of the Let's UI design system<span class="sr-only">
+            (opens in a new tab)</span
+          ></a
+        >
+      </footer>
+    </div>
+
+    <!-- Details drawer (non-modal: the grid stays usable while it is open) -->
+    <aside
+      class="drawer drawer--sm details"
+      id="details"
+      aria-label="Icon details"
+      aria-hidden="true"
+      inert
+    >
+      <div class="drawer__header">
+        <h2
+          class="drawer__title details__name"
+          id="detailsName"
+          tabindex="-1"
+        >
+        </h2>
+        <button
+          type="button"
+          class="drawer__close"
+          id="detailsClose"
+          aria-label="Close icon details"
+          set:html={ui('x')}
+        />
+      </div>
+
+      <div class="drawer__body details__body">
+        <div class="stage" id="stage" role="img" aria-label="">
+          <div class="stage__icon" id="stageIcon"></div>
+          <span class="stage__size" id="stageSize" aria-hidden="true">24px</span>
+        </div>
+
+        <div class="variants" role="radiogroup" aria-label="Icon style">
+          <button
+            type="button"
+            class="variant"
+            role="radio"
+            data-variant="outline"
+            aria-checked="true"
+          >
+            <span class="variant__icon" id="variantOutline"></span>
+            <span class="variant__label">Outline</span>
+          </button>
+          <button
+            type="button"
+            class="variant"
+            role="radio"
+            data-variant="solid"
+            aria-checked="false"
+            tabindex="-1"
+          >
+            <span class="variant__icon" id="variantSolid"></span>
+            <span class="variant__label">Solid</span>
+          </button>
+        </div>
+        <p class="details__note body--sm text--color-caption" id="solidNote" hidden>
+          No solid drawing yet — showing outline.
+        </p>
+
+        <div class="details__actions">
+          <button type="button" class="btn btn--md btn--primary" id="copySvg">
+            <span class="btn__icon" set:html={ui('copy')} />
+            Copy SVG
+            <span class="details__badge" id="copySize" aria-hidden="true"
+              >24px</span
+            >
+            <span class="sr-only" id="copySizeSr">at 24 pixels</span>
+          </button>
+          <button
+            type="button"
+            class="btn btn--md btn--neutral"
+            id="downloadSvg"
+          >
+            <span class="btn__icon" set:html={ui('download')} />
+            Download<span class="sr-only"> SVG</span>
+          </button>
+        </div>
+
+        <div class="tabs tabs--line usage">
+          <div class="tabs__list" role="tablist" aria-label="Usage snippet">
+            <button
+              type="button"
+              class="tab"
+              role="tab"
+              id="tab-html"
+              aria-controls="usage-panel"
+              aria-selected="true"
+              data-tab="html">HTML</button
+            >
+            <button
+              type="button"
+              class="tab"
+              role="tab"
+              id="tab-wc"
+              aria-controls="usage-panel"
+              aria-selected="false"
+              tabindex="-1"
+              data-tab="wc">Web Component</button
+            >
+            <button
+              type="button"
+              class="tab"
+              role="tab"
+              id="tab-svg"
+              aria-controls="usage-panel"
+              aria-selected="false"
+              tabindex="-1"
+              data-tab="svg">SVG</button
+            >
+          </div>
+          <div
+            class="tabs__panel code"
+            role="tabpanel"
+            id="usage-panel"
+            aria-labelledby="tab-html"
+          >
+            <pre class="code__block"><code id="usageCode"></code></pre>
+            <button
+              type="button"
+              class="icon-button icon-button--md code__copy"
+              id="copyUsage"
+              aria-label="Copy snippet"
+              title="Copy snippet"
+            >
+              <span class="code__copy-icon" set:html={ui('copy')} />
+              <span class="code__check-icon" set:html={ui('check')} />
+            </button>
           </div>
         </div>
       </div>
-    </div>
+    </aside>
 
-    <!-- Icon data for client JS -->
+    <!-- Toasts -->
+    <div class="toasts" id="toasts" role="status"></div>
+    <template id="toastIcon"><Fragment set:html={ui('check-circle', 'solid')} /></template>
+
     <script
       type="application/json"
       id="icon-data"
-      set:html={JSON.stringify(iconData)}
+      set:html={JSON.stringify(icons)}
     />
 
     <script>
-      const icons = JSON.parse(
-        document.getElementById('icon-data').textContent
-      );
+      type Icon = {
+        name: string;
+        outline: string;
+        solid: string;
+        hasSolid: boolean;
+      };
+      type Variant = 'outline' | 'solid';
+      type UsageTab = 'html' | 'wc' | 'svg';
+
+      const $ = <T extends HTMLElement = HTMLElement>(id: string) =>
+        document.getElementById(id) as T;
+
+      const icons: Icon[] = JSON.parse($('icon-data').textContent ?? '[]');
+      const root = document.documentElement;
+      const page = $('page');
 
       // ── State ──
-      let searchQuery = '';
-      let activeVariant = 'outline';
-      let currentIcon = null;
-      let selectedCard = null;
+      const store = {
+        get: (k: string) => localStorage.getItem(`lui-icons:${k}`),
+        set: (k: string, v: string) =>
+          localStorage.setItem(`lui-icons:${k}`, v),
+      };
+
+      // The grid style is global; the details panel keeps its own, so trying
+      // a style there never changes the list.
+      let variant: Variant = store.get('variant') === 'solid' ? 'solid' : 'outline';
+      let detailVariant: Variant = variant;
+      let size = Number(store.get('size')) || 24;
+      let color = store.get('color') ?? ''; // '' = follows the text colour
+      let current: Icon | null = null;
+      let usageTab: UsageTab = 'html';
 
       // ── Elements ──
-      const grid = document.getElementById('grid');
-      const cards = [...grid.querySelectorAll('.icon-card')];
-      const noResults = document.getElementById('noResults');
-      const resultsCount = document.getElementById('resultsCount');
-      const sheet = document.getElementById('sheet');
-      const main = document.querySelector('.main');
+      const grid = $('grid');
+      const tiles = [...grid.querySelectorAll<HTMLLIElement>('.tile')];
+      const search = $<HTMLInputElement>('search');
+      const searchClear = $('searchClear');
+      const resultsCount = $('resultsCount');
+      const empty = $('empty');
+      const sizeSlider = $<HTMLInputElement>('sizeSlider');
+      const sizeValue = $('sizeValue');
+      const colorPicker = $<HTMLInputElement>('colorPicker');
+      const details = $('details');
 
-      const SHEET_HEIGHT = 216; // px — keep in sync with .sheet-layout height + top bar
+      // ── SVG export ──
+      function rawSvg(icon: Icon, v: Variant = variant) {
+        return v === 'solid' ? icon.solid : icon.outline;
+      }
 
-      // ── Filter ──
-      function applyFilter() {
-        const q = searchQuery.toLowerCase();
-        let visible = 0;
+      function exportSvg(icon: Icon, v: Variant = variant) {
+        const fill = color || 'currentColor';
+        return rawSvg(icon, v).replace(
+          '<svg',
+          `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" fill="${fill}"`
+        );
+      }
 
-        for (const card of cards) {
-          if (!q || card.dataset.name.includes(q)) {
-            card.classList.remove('hidden');
-            visible++;
-          } else {
-            card.classList.add('hidden');
-          }
+      function displaySvg(svg: string) {
+        return svg.replace('<svg', '<svg fill="currentColor" aria-hidden="true"');
+      }
+
+      // ── Toast ──
+      const toasts = $('toasts');
+      const toastIcon = ($('toastIcon') as unknown as HTMLTemplateElement)
+        .innerHTML;
+
+      function toast(title: string, detail = '') {
+        const el = document.createElement('div');
+        el.className = 'toast toast--success toast--entering';
+        el.innerHTML = `
+          <span class="toast__icon">${toastIcon}</span>
+          <div class="toast__text body--md">
+            <p></p>${detail ? '<p class="text--color-caption"></p>' : ''}
+          </div>`;
+        const [t, d] = el.querySelectorAll('p');
+        t.textContent = title;
+        if (d) d.textContent = detail;
+
+        toasts.replaceChildren(el);
+        setTimeout(() => {
+          el.classList.replace('toast--entering', 'toast--exiting');
+          el.addEventListener('animationend', () => el.remove(), { once: true });
+        }, 2200);
+      }
+
+      async function copy(text: string, title: string, detail?: string) {
+        try {
+          await navigator.clipboard.writeText(text);
+          toast(title, detail);
+          return true;
+        } catch {
+          toast('Copy failed', 'Your browser blocked clipboard access.');
+          return false;
         }
-
-        noResults.classList.toggle('visible', visible === 0);
-        resultsCount.textContent = `${visible} icon${visible === 1 ? '' : 's'}`;
       }
 
       // ── Search ──
-      let searchTimer;
-      document.getElementById('search').addEventListener('input', (e) => {
-        clearTimeout(searchTimer);
-        searchTimer = setTimeout(() => {
-          searchQuery = e.target.value.trim();
-          applyFilter();
-        }, 150);
-      });
-
-      // ── Color ──
-      document.getElementById('colorPicker').addEventListener('input', (e) => {
-        document.documentElement.style.setProperty(
-          '--icon-color',
-          e.target.value
-        );
-      });
-
-      // ── Size ──
-      const sizeSlider = document.getElementById('sizeSlider');
-      const sizeValue = document.getElementById('sizeValue');
-
-      sizeSlider.addEventListener('input', (e) => {
-        const px = Number(e.target.value);
-        document.documentElement.style.setProperty('--icon-size', px + 'px');
-        sizeValue.textContent = px + 'px';
-      });
-
-      // ── Sheet ──
-      function toDisplaySvg(svg) {
-        if (!svg) return '';
-        return svg.replace('<svg', '<svg fill="currentColor"');
-      }
-
-      function updateSheetContent() {
-        const icon = currentIcon;
-        if (!icon) return;
-
-        const isSolid = activeVariant === 'solid' && icon.hasSolid;
-        const rawSvg = isSolid ? icon.solidSvg : icon.outlineSvg;
-
-        const sheetIcon = document.getElementById('sheetIcon');
-        sheetIcon.innerHTML = toDisplaySvg(rawSvg);
-        const svgEl = sheetIcon.querySelector('svg');
-        if (svgEl)
-          Object.assign(svgEl.style, {
-            width: '40px',
-            height: '40px',
-            display: 'block',
-          });
-
-        document.getElementById('sheetName').textContent = icon.name;
-
-        document.getElementById('codeWeb').textContent = isSolid
-          ? `<i class="lui-solid lui-${icon.name}"></i>`
-          : `<i class="lui lui-${icon.name}"></i>`;
-
-        document.getElementById('codeWc').textContent = isSolid
-          ? `<lui-${icon.name} solid></lui-${icon.name}>`
-          : `<lui-${icon.name}></lui-${icon.name}>`;
-
-        // SVG stored on currentIcon for copy button in left column
-      }
-
-      function openSheet(index, card) {
-        const isAlreadyOpen = sheet.classList.contains('open');
-
-        // Update selected card highlight
-        if (selectedCard) selectedCard.classList.remove('selected');
-        selectedCard = card;
-        card.classList.add('selected');
-
-        currentIcon = icons[index];
-        activeVariant = 'outline';
-
-        document.querySelectorAll('.var-btn').forEach((b) => {
-          b.classList.toggle('active', b.dataset.var === 'outline');
-        });
-        document.getElementById('variantToggle').style.display =
-          currentIcon.hasSolid ? 'flex' : 'none';
-
-        activateTab('web');
-        updateSheetContent();
-
-        if (!isAlreadyOpen) {
-          sheet.classList.add('open');
-          sheet.removeAttribute('aria-hidden');
-          main.style.paddingBottom = SHEET_HEIGHT + 'px';
+      function applyFilter() {
+        const q = search.value.trim().toLowerCase().replace(/\s+/g, '-');
+        let visible = 0;
+        for (const tile of tiles) {
+          const match = !q || tile.dataset.name!.includes(q);
+          tile.hidden = !match;
+          if (match) visible++;
         }
+        searchClear.hidden = !search.value;
+        empty.hidden = visible > 0;
+        if (!visible) $('emptyText').textContent = `Nothing matches “${search.value.trim()}”.`;
+        resultsCount.textContent = q
+          ? `${visible} of ${icons.length} icons`
+          : `${icons.length} icons`;
+        return visible;
       }
 
-      function closeSheet() {
-        sheet.classList.remove('open');
-        sheet.setAttribute('aria-hidden', 'true');
-        main.style.paddingBottom = '';
-        if (selectedCard) {
-          selectedCard.classList.remove('selected');
-          selectedCard = null;
-        }
-        currentIcon = null;
+      // Screen readers hear the result once typing settles, not per keystroke.
+      const resultsLive = $('resultsLive');
+      let announceTimer: number | undefined;
+
+      search.addEventListener('input', () => {
+        const visible = applyFilter();
+        clearTimeout(announceTimer);
+        announceTimer = window.setTimeout(() => {
+          resultsLive.textContent = !search.value.trim()
+            ? `Showing all ${icons.length} icons`
+            : visible
+              ? `${visible} ${visible === 1 ? 'icon' : 'icons'} found`
+              : 'No icons found';
+        }, 500);
+      });
+
+      function clearSearch() {
+        search.value = '';
+        applyFilter();
+        resultsLive.textContent = `Search cleared, showing all ${icons.length} icons`;
+        search.focus();
       }
-
-      cards.forEach((card) => {
-        card.addEventListener('click', (e) => {
-          e.stopPropagation();
-          openSheet(Number(card.dataset.index), card);
-        });
-      });
-
-      // Close on outside click
-      document.addEventListener('click', (e) => {
-        if (!sheet.classList.contains('open')) return;
-        if (!sheet.contains(e.target)) closeSheet();
-      });
-
-      // Close on Escape
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeSheet();
-      });
-
-      document
-        .getElementById('sheetClose')
-        .addEventListener('click', closeSheet);
+      searchClear.addEventListener('click', clearSearch);
+      $('emptyClear').addEventListener('click', clearSearch);
 
       // ── Variant ──
-      document.querySelectorAll('.var-btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          document
-            .querySelectorAll('.var-btn')
-            .forEach((b) => b.classList.remove('active'));
-          btn.classList.add('active');
-          activeVariant = btn.dataset.var;
-          updateSheetContent();
+      const gridVariants = $('variantGroup');
+      const detailVariants = details.querySelector<HTMLElement>('.variants')!;
+
+      function checkVariant(group: HTMLElement, v: Variant) {
+        group
+          .querySelectorAll<HTMLElement>('[role="radio"]')
+          .forEach((b) => {
+            const on = b.dataset.variant === v;
+            b.setAttribute('aria-checked', String(on));
+            b.tabIndex = on ? 0 : -1;
+          });
+      }
+
+      // Grid: every icon on the page. The panel follows along.
+      function setVariant(v: Variant) {
+        variant = v;
+        store.set('variant', v);
+        page.dataset.variant = v;
+        checkVariant(gridVariants, v);
+        setDetailVariant(v);
+      }
+
+      // Panel only: preview, copy, download and snippets.
+      function setDetailVariant(v: Variant) {
+        detailVariant = v;
+        checkVariant(detailVariants, v);
+        renderDetails();
+      }
+
+      gridVariants
+        .querySelectorAll<HTMLElement>('[role="radio"]')
+        .forEach((btn) =>
+          btn.addEventListener('click', () =>
+            setVariant(btn.dataset.variant as Variant)
+          )
+        );
+
+      detailVariants
+        .querySelectorAll<HTMLElement>('[role="radio"]')
+        .forEach((btn) =>
+          btn.addEventListener('click', () =>
+            setDetailVariant(btn.dataset.variant as Variant)
+          )
+        );
+
+      // ── Size ──
+      function setSize(px: number) {
+        size = px;
+        store.set('size', String(px));
+        sizeSlider.value = String(px);
+        sizeSlider.style.setProperty(
+          '--fill',
+          `${((px - 16) / (64 - 16)) * 100}%`
+        );
+        root.style.setProperty('--icon-size', `${px}px`);
+        sizeSlider.setAttribute('aria-valuetext', `${px} pixels`);
+        sizeValue.textContent = `${px}px`;
+        $('stageSize').textContent = `${px}px`;
+        $('copySize').textContent = `${px}px`;
+        $('copySizeSr').textContent = `at ${px} pixels`;
+        renderUsage();
+      }
+      sizeSlider.addEventListener('input', () =>
+        setSize(Number(sizeSlider.value))
+      );
+
+      // ── Color ──
+      const swatches = [
+        ...document.querySelectorAll<HTMLElement>('#swatches [data-color]'),
+      ];
+      const customSwatch = colorPicker.closest<HTMLElement>('.swatch')!;
+
+      function setColor(value: string) {
+        color = value;
+        store.set('color', value);
+        if (value) root.style.setProperty('--icon-color', value);
+        else root.style.removeProperty('--icon-color');
+
+        const preset = swatches.find((s) => s.dataset.color === value);
+        // Roving focus: the checked swatch, or the first one when a custom
+        // colour is active, is the group's single tab stop.
+        swatches.forEach((s) => {
+          s.setAttribute('aria-checked', String(s === preset));
+          s.tabIndex = s === (preset ?? swatches[0]) ? 0 : -1;
+        });
+        customSwatch.classList.toggle('is-active', !preset);
+        if (!preset) {
+          colorPicker.value = value;
+          customSwatch.style.setProperty('--swatch', value);
+        }
+        renderUsage();
+      }
+
+      swatches.forEach((s) =>
+        s.addEventListener('click', () => setColor(s.dataset.color ?? ''))
+      );
+      colorPicker.addEventListener('input', () => setColor(colorPicker.value));
+
+      // ── Theme ──
+      const themeToggle = $('themeToggle');
+      const syncTheme = () =>
+        themeToggle.setAttribute(
+          'aria-pressed',
+          String(root.dataset.theme === 'dark')
+        );
+
+      themeToggle.addEventListener('click', () => {
+        const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        root.dataset.theme = next;
+        store.set('theme', next);
+        syncTheme();
+      });
+
+      // ── Details drawer ──
+      function renderUsage() {
+        if (!current) return;
+        const { name } = current;
+        const solid = detailVariant === 'solid';
+        const snippets: Record<UsageTab, string> = {
+          html: `<i class="${solid ? 'lui-solid' : 'lui'} lui-${name}"></i>`,
+          wc: `<lui-${name}${solid ? ' solid' : ''}></lui-${name}>`,
+          svg: exportSvg(current, detailVariant),
+        };
+        $('usageCode').textContent = snippets[usageTab];
+        $('stage').setAttribute(
+          'aria-label',
+          `${name} icon preview, ${detailVariant}, ${size} pixels`
+        );
+      }
+
+      function renderDetails() {
+        if (!current) return;
+        $('detailsName').textContent = current.name;
+        $('stageIcon').innerHTML = displaySvg(rawSvg(current, detailVariant));
+        $('variantOutline').innerHTML = displaySvg(current.outline);
+        $('variantSolid').innerHTML = displaySvg(current.solid);
+        $('solidNote').hidden = current.hasSolid || detailVariant !== 'solid';
+        renderUsage();
+      }
+
+      function setExpanded(tile: HTMLLIElement, on: boolean) {
+        tile.classList.toggle('is-selected', on);
+        tile
+          .querySelector('.tile__main')!
+          .setAttribute('aria-expanded', String(on));
+      }
+
+      function openDetails(tile: HTMLLIElement) {
+        tiles.forEach((c) => setExpanded(c, c === tile));
+        current = icons[Number(tile.dataset.index)];
+        // Each icon opens in the grid's style.
+        setDetailVariant(variant);
+        details.classList.add('is-open');
+        details.removeAttribute('aria-hidden');
+        details.inert = false;
+        page.classList.add('has-details');
+        // Move focus into the panel so screen readers land on the icon name.
+        $('detailsName').focus();
+      }
+
+      function closeDetails() {
+        if (!current) return;
+        const tile = tiles.find((c) => c.classList.contains('is-selected'));
+        if (tile) setExpanded(tile, false);
+        details.classList.remove('is-open');
+        details.setAttribute('aria-hidden', 'true');
+        details.inert = true;
+        page.classList.remove('has-details');
+        current = null;
+        tile?.querySelector<HTMLElement>('.tile__main')?.focus();
+      }
+
+      $('detailsClose').addEventListener('click', closeDetails);
+
+      document.querySelectorAll<HTMLElement>('.usage [role="tab"]').forEach((tab, _, all) => {
+        tab.addEventListener('click', () => {
+          usageTab = tab.dataset.tab as UsageTab;
+          all.forEach((t) => {
+            const on = t === tab;
+            t.setAttribute('aria-selected', String(on));
+            t.tabIndex = on ? 0 : -1;
+          });
+          $('usage-panel').setAttribute('aria-labelledby', tab.id);
+          renderUsage();
         });
       });
 
-      // ── Tabs ──
-      function activateTab(name) {
-        document
-          .querySelectorAll('.tab')
-          .forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
-        document
-          .getElementById('panelWeb')
-          .classList.toggle('active', name === 'web');
-        document
-          .getElementById('panelWc')
-          .classList.toggle('active', name === 'wc');
-      }
-
-      document.querySelectorAll('.tab').forEach((tab) => {
-        tab.addEventListener('click', () => activateTab(tab.dataset.tab));
+      $('copyUsage').addEventListener('click', async (e) => {
+        const btn = e.currentTarget as HTMLElement;
+        if (await copy($('usageCode').textContent ?? '', 'Snippet copied')) {
+          btn.classList.add('is-copied');
+          setTimeout(() => btn.classList.remove('is-copied'), 1600);
+        }
       });
 
-      // ── Copy ──
-      function copyText(text, btn) {
-        navigator.clipboard.writeText(text).then(() => {
-          btn.classList.add('copied');
-          setTimeout(() => btn.classList.remove('copied'), 1800);
+      $('copySvg').addEventListener('click', () => {
+        if (current)
+          copy(
+            exportSvg(current, detailVariant),
+            'SVG copied',
+            `${current.name} · ${detailVariant} · ${size}px`
+          );
+      });
+
+      $('downloadSvg').addEventListener('click', () => {
+        if (!current) return;
+        const blob = new Blob([exportSvg(current, detailVariant)], {
+          type: 'image/svg+xml',
+        });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${current.name}${detailVariant === 'solid' ? '-solid' : ''}.svg`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        toast('SVG downloaded', a.download);
+      });
+
+      // ── Grid ──
+      grid.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const tile = target.closest<HTMLLIElement>('.tile');
+        if (!tile) return;
+        const icon = icons[Number(tile.dataset.index)];
+
+        if (target.closest('.tile__copy')) {
+          copy(exportSvg(icon), 'SVG copied', `${icon.name} · ${variant} · ${size}px`);
+          return;
+        }
+        if (tile.classList.contains('is-selected')) closeDetails();
+        else openDetails(tile);
+      });
+
+      // Arrow keys move focus across the grid, row by row.
+      grid.addEventListener('keydown', (e) => {
+        const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+        if (!keys.includes(e.key)) return;
+        const tile = (e.target as HTMLElement).closest<HTMLLIElement>('.tile');
+        if (!tile) return;
+
+        const visible = tiles.filter((c) => !c.hidden);
+        const cols = getComputedStyle(grid).gridTemplateColumns.split(' ').length;
+        const step = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -cols, ArrowDown: cols }[e.key]!;
+        const next = visible[visible.indexOf(tile) + step];
+        if (!next) return;
+
+        e.preventDefault();
+        next.querySelector<HTMLElement>('.tile__main')!.focus();
+      });
+
+      // Radio groups and the usage tabs follow the ARIA pattern: one tab stop,
+      // arrow keys move and select, Home/End jump to the ends.
+      function arrowSelect(list: Element, selector: string, vertical = true) {
+        list.addEventListener('keydown', (e) => {
+          const { key } = e as KeyboardEvent;
+          const items = [...list.querySelectorAll<HTMLElement>(selector)];
+          const i = items.indexOf(e.target as HTMLElement);
+          if (i < 0) return;
+
+          const steps: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1 };
+          if (vertical) Object.assign(steps, { ArrowDown: 1, ArrowUp: -1 });
+
+          const next =
+            key in steps
+              ? items[(i + steps[key] + items.length) % items.length]
+              : key === 'Home'
+                ? items[0]
+                : key === 'End'
+                  ? items[items.length - 1]
+                  : null;
+          if (!next) return;
+
+          e.preventDefault();
+          next.focus();
+          next.click();
         });
       }
 
-      document.getElementById('copyWeb').addEventListener('click', (e) => {
-        copyText(
-          document.getElementById('codeWeb').textContent,
-          e.currentTarget
-        );
+      document
+        .querySelectorAll('[role="radiogroup"]')
+        .forEach((g) => arrowSelect(g, '[role="radio"]'));
+      arrowSelect(
+        document.querySelector('.usage [role="tablist"]')!,
+        '[role="tab"]',
+        false
+      );
+
+      // ── Global shortcuts ──
+      document.addEventListener('keydown', (e) => {
+        const typing = (e.target as HTMLElement).matches('input, textarea');
+        if ((e.key === '/' && !typing) || (e.key === 'k' && (e.metaKey || e.ctrlKey))) {
+          e.preventDefault();
+          search.focus();
+          search.select();
+        } else if (e.key === 'Escape') {
+          if (current) closeDetails();
+          else if (document.activeElement === search && search.value) clearSearch();
+        }
       });
-      document.getElementById('copyWc').addEventListener('click', (e) => {
-        copyText(
-          document.getElementById('codeWc').textContent,
-          e.currentTarget
-        );
-      });
-      document.getElementById('copySvg').addEventListener('click', (e) => {
-        if (!currentIcon) return;
-        const isSolid = activeVariant === 'solid' && currentIcon.hasSolid;
-        const svg = isSolid ? currentIcon.solidSvg : currentIcon.outlineSvg;
-        copyText(svg, e.currentTarget);
-      });
+
+      // Mark the toolbar once it sticks to the top.
+      const sentinel = document.createElement('div');
+      $('toolbar').before(sentinel);
+      new IntersectionObserver(([entry]) =>
+        $('toolbar').classList.toggle('is-stuck', !entry.isIntersecting)
+      ).observe(sentinel);
+
+      // ── Init ──
+      setVariant(variant);
+      setSize(size);
+      setColor(color);
+      syncTheme();
+      applyFilter();
+      setTimeout(() => grid.classList.add('is-ready'), 1400);
     </script>
   </body>
 </html>

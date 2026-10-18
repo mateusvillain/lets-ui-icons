@@ -65,9 +65,10 @@ function roundNumbers(value) {
 const PATH_PARAMS = { M: 2, L: 2, T: 2, H: 1, V: 1, C: 6, S: 4, Q: 4, A: 7 };
 
 // Desloca um path por (dx, dy). Só os comandos absolutos (maiúsculos)
-// mudam; nos arcos, só o ponto final (os dois últimos números).
+// mudam; nos arcos, só o ponto final (os dois últimos números). O split
+// é só pelas letras de comando: o "e" de 1.5e-7 fica com o número.
 function translatePath(d, dx, dy) {
-  return d.replace(/([a-z])([^a-z]*)/gi, (_, cmd, args) => {
+  return d.replace(/([MLHVCSQTAZ])([^MLHVCSQTAZ]*)/gi, (_, cmd, args) => {
     const size = PATH_PARAMS[cmd];
     if (!size) return cmd + args;
 
@@ -190,21 +191,22 @@ async function readExport(file) {
 
   for (const icon of icons) {
     const key = `${icon.name}#${icon.style}`;
-    if (seen.has(key)) errors.push(`${key}: duplicado`);
-    seen.add(key);
 
     if (!STYLES.includes(icon.style)) {
       errors.push(`${key}: style inválido`);
       continue;
     }
 
+    // Pelo nome do arquivo: "a/arrow" e "b/arrow" também colidem
+    const name = parseName(icon.name);
+    const fileName =
+      icon.style === 'outline' ? `${name}.svg` : `${name}-${icon.style}.svg`;
+    if (seen.has(fileName)) errors.push(`${key}: ${fileName} duplicado`);
+    seen.add(fileName);
+
     try {
-      const name = parseName(icon.name);
       files.push({
-        fileName:
-          icon.style === 'outline'
-            ? `${name}.svg`
-            : `${name}-${icon.style}.svg`,
+        fileName,
         svg: optimize(cleanPenpotSvg(icon.svg), svgoConfig).data,
       });
     } catch (err) {

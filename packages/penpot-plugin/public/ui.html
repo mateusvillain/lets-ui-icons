@@ -81,7 +81,7 @@
     <p>
       Exporta todos os ícones deste arquivo para
       <code>lets-ui-icons-penpot.json</code>. Depois rode
-      <code>pnpm --filter @lets-ui/icons pull:penpot</code>.
+      <code>pnpm pull:penpot</code>.
     </p>
 
     <button id="export" type="button">Exportar ícones</button>
@@ -129,6 +129,8 @@
       });
 
       window.addEventListener('message', ({ data: message }) => {
+        // Ignora mensagens que não são do plugin.js
+        if (!['result', 'error'].includes(message?.type)) return;
         button.disabled = false;
 
         if (message.type === 'error') {

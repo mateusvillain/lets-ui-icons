@@ -1,0 +1,7 @@
+{
+  "name": "Let's UI Icons · Export",
+  "description": "Exporta os ícones do arquivo para o pull:penpot do lets-ui-icons.",
+  "version": 2,
+  "code": "plugin.js",
+  "permissions": ["content:read", "library:read", "allow:downloads"]
+}

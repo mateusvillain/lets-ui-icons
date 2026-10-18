@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Let's UI Icons · Export</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --fg: #000000;
+        --muted: #6b6b6b;
+        --accent: #6911d4;
+        --danger: #c8141e;
+        --border: #e2e2e2;
+      }
+
+      [data-theme='dark'] {
+        --bg: #18181a;
+        --fg: #ffffff;
+        --muted: #a0a0a0;
+        --accent: #bb97d8;
+        --danger: #ff6670;
+        --border: #2e3434;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 16px;
+        font:
+          13px/1.4 system-ui,
+          sans-serif;
+        color: var(--fg);
+        background: var(--bg);
+      }
+
+      p {
+        margin: 0 0 12px;
+      }
+
+      button {
+        width: 100%;
+        padding: 8px 12px;
+        border: 0;
+        border-radius: 8px;
+        font: inherit;
+        font-weight: 600;
+        color: var(--bg);
+        background: var(--accent);
+        cursor: pointer;
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+
+      progress {
+        width: 100%;
+        margin-top: 12px;
+        accent-color: var(--accent);
+      }
+
+      #status {
+        margin-top: 8px;
+        color: var(--muted);
+      }
+
+      #errors {
+        margin: 8px 0 0;
+        padding: 8px 8px 8px 24px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        max-height: 160px;
+        overflow: auto;
+        color: var(--danger);
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <p>
+      Exporta todos os ícones deste arquivo para
+      <code>lets-ui-icons-penpot.json</code>. Depois rode
+      <code>pnpm --filter @lets-ui/icons pull:penpot</code>.
+    </p>
+
+    <button id="export" type="button">Exportar ícones</button>
+    <progress id="progress" value="0" max="1" hidden></progress>
+    <div id="status" role="status"></div>
+    <ul id="errors" hidden></ul>
+
+    <script>
+      const FILE_NAME = 'lets-ui-icons-penpot.json';
+
+      const button = document.getElementById('export');
+      const progress = document.getElementById('progress');
+      const status = document.getElementById('status');
+      const errorList = document.getElementById('errors');
+
+      // Manifest versão 2: os parâmetros vêm no hash (#/?theme=dark)
+      const params = new URLSearchParams(location.hash.split('?')[1]);
+      document.documentElement.dataset.theme = params.get('theme') || 'light';
+
+      function download(data) {
+        const blob = new Blob([JSON.stringify(data, null, 2)], {
+          type: 'application/json',
+        });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = FILE_NAME;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+      }
+
+      function showErrors(errors) {
+        errorList.replaceChildren(
+          ...errors.map((text) => {
+            const li = document.createElement('li');
+            li.textContent = text;
+            return li;
+          })
+        );
+        errorList.hidden = !errors.length;
+      }
+
+      button.addEventListener('click', () => {
+        button.disabled = true;
+        progress.hidden = false;
+        progress.value = 0;
+        status.textContent = 'Exportando…';
+        showErrors([]);
+        parent.postMessage({ type: 'export' }, '*');
+      });
+
+      window.addEventListener('message', ({ data: message }) => {
+        if (message.type === 'progress') {
+          progress.max = message.total;
+          progress.value = message.done;
+          status.textContent = `${message.done} de ${message.total}`;
+          return;
+        }
+
+        button.disabled = false;
+        progress.hidden = true;
+
+        if (message.type === 'error') {
+          status.textContent = 'Falha na exportação.';
+          showErrors([message.message]);
+          return;
+        }
+
+        if (message.type === 'result') {
+          const { errors, ...data } = message.data;
+          if (errors.length) {
+            status.textContent = `${errors.length} erro(s). Nada foi baixado.`;
+            showErrors(errors);
+            return;
+          }
+          download(data);
+          status.textContent = `${data.total} ícones exportados.`;
+        }
+      });
+    </script>
+  </body>
+</html>

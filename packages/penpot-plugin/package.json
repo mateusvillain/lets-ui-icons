@@ -1,0 +1,16 @@
+{
+  "name": "@lets-ui/icons-penpot-plugin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Plugin do Penpot que exporta os ícones do Let's UI para o pull:penpot.",
+  "license": "MIT",
+  "author": {
+    "name": "Mateus Villain",
+    "email": "mateus@mateusvillain.com",
+    "url": "https://mateusvillain.com"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/serve.js"
+  }
+}

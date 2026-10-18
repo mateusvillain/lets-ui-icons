@@ -57,14 +57,8 @@
         cursor: default;
       }
 
-      progress {
-        width: 100%;
-        margin-top: 12px;
-        accent-color: var(--accent);
-      }
-
       #status {
-        margin-top: 8px;
+        margin-top: 12px;
         color: var(--muted);
       }
 
@@ -91,7 +85,6 @@
     </p>
 
     <button id="export" type="button">Exportar ícones</button>
-    <progress id="progress" value="0" max="1" hidden></progress>
     <div id="status" role="status"></div>
     <ul id="errors" hidden></ul>
 
@@ -99,7 +92,6 @@
       const FILE_NAME = 'lets-ui-icons-penpot.json';
 
       const button = document.getElementById('export');
-      const progress = document.getElementById('progress');
       const status = document.getElementById('status');
       const errorList = document.getElementById('errors');
 
@@ -131,23 +123,13 @@
 
       button.addEventListener('click', () => {
         button.disabled = true;
-        progress.hidden = false;
-        progress.value = 0;
         status.textContent = 'Exportando…';
         showErrors([]);
         parent.postMessage({ type: 'export' }, '*');
       });
 
       window.addEventListener('message', ({ data: message }) => {
-        if (message.type === 'progress') {
-          progress.max = message.total;
-          progress.value = message.done;
-          status.textContent = `${message.done} de ${message.total}`;
-          return;
-        }
-
         button.disabled = false;
-        progress.hidden = true;
 
         if (message.type === 'error') {
           status.textContent = 'Falha na exportação.';

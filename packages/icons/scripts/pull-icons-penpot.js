@@ -61,14 +61,48 @@ function roundNumbers(value) {
   );
 }
 
-// O SVG exportado pelo Penpot é o render do workspace: clipPath, fundo do
-// board e cada forma duplicada (uma cópia em .fills, outra em .stroke-shape).
-// Aqui sobram só as formas visíveis, sem cor, como no export do Figma.
-function cleanPenpotSvg(raw) {
-  const viewBox = raw.match(/<svg\b[^>]*\sviewBox="([^"]+)"/)?.[1];
-  if (!viewBox) throw new Error('SVG sem viewBox');
+// Quantos números cada comando de path recebe
+const PATH_PARAMS = { M: 2, L: 2, T: 2, H: 1, V: 1, C: 6, S: 4, Q: 4, A: 7 };
 
-  const elements = [];
+// Desloca um path por (dx, dy). Só os comandos absolutos (maiúsculos)
+// mudam; nos arcos, só o ponto final (os dois últimos números).
+function translatePath(d, dx, dy) {
+  return d.replace(/([a-z])([^a-z]*)/gi, (_, cmd, args) => {
+    const size = PATH_PARAMS[cmd];
+    if (!size) return cmd + args;
+
+    const nums = args.match(/-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?/gi) ?? [];
+    const moved = nums.map((n, i) => {
+      const k = i % size;
+      let shift = 0;
+      if (cmd === 'H') shift = dx;
+      else if (cmd === 'V') shift = dy;
+      else if (cmd === 'A') shift = k === 5 ? dx : k === 6 ? dy : 0;
+      else shift = k % 2 ? dy : dx;
+      return Number(n) + shift;
+    });
+    return cmd + moved.join(',');
+  });
+}
+
+// O SVG do penpot.generateMarkup é o render do workspace: clipPath, fundo do
+// board, coordenadas da página (o viewBox não começa em 0 0) e cada forma
+// repetida (uma cópia dentro do board, outra depois dele, e mais uma em
+// .stroke-shape quando há stroke). Aqui sobram só as formas visíveis, sem
+// cor e em 0 0, como no export do Figma.
+function cleanPenpotSvg(raw) {
+  const viewBox = raw
+    .match(/<svg\b[^>]*\sviewBox="([^"]+)"/)?.[1]
+    ?.trim()
+    .split(/[\s,]+/)
+    .map(Number);
+  if (viewBox?.length !== 4) throw new Error('SVG sem viewBox');
+
+  const [x, y, width, height] = viewBox;
+  const d = (value) => roundNumbers(translatePath(value, -x, -y));
+  const num = (value, shift) => roundNumbers(String(Number(value) + shift));
+
+  const elements = new Set();
 
   for (const [, tag, attrSource] of raw.matchAll(
     /<(path|ellipse)\b([^>]*?)\/?>/g
@@ -78,8 +112,8 @@ function cleanPenpotSvg(raw) {
 
     if (style.stroke && style.stroke !== 'none') {
       if (tag !== 'path') throw new Error(`stroke em <${tag}> não suportado`);
-      elements.push(
-        `<path d="${roundNumbers(attrs.d)}" stroke-width="${parseFloat(style['stroke-width'])}"` +
+      elements.add(
+        `<path d="${d(attrs.d)}" stroke-width="${parseFloat(style['stroke-width'])}"` +
           ` stroke-linecap="${style['stroke-linecap'] || 'round'}"` +
           ` stroke-linejoin="${style['stroke-linejoin'] || 'round'}"/>`
       );
@@ -94,10 +128,10 @@ function cleanPenpotSvg(raw) {
     if (!hasFill) continue;
 
     if (tag === 'ellipse') {
-      const [cx, cy, rx, ry] = ['cx', 'cy', 'rx', 'ry'].map((k) =>
-        roundNumbers(attrs[k])
-      );
-      elements.push(
+      const cx = num(attrs.cx, -x);
+      const cy = num(attrs.cy, -y);
+      const [rx, ry] = [attrs.rx, attrs.ry].map(roundNumbers);
+      elements.add(
         rx === ry
           ? `<circle cx="${cx}" cy="${cy}" r="${rx}"/>`
           : `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"/>`
@@ -107,12 +141,12 @@ function cleanPenpotSvg(raw) {
 
     const fillRule =
       attrs['fill-rule'] === 'evenodd' ? ' fill-rule="evenodd"' : '';
-    elements.push(`<path d="${roundNumbers(attrs.d)}"${fillRule}/>`);
+    elements.add(`<path d="${d(attrs.d)}"${fillRule}/>`);
   }
 
-  if (!elements.length) throw new Error('nenhuma forma visível encontrada');
+  if (!elements.size) throw new Error('nenhuma forma visível encontrada');
 
-  return `<svg viewBox="${roundNumbers(viewBox)}">${elements.join('')}</svg>`;
+  return `<svg viewBox="0 0 ${roundNumbers(`${width} ${height}`)}">${[...elements].join('')}</svg>`;
 }
 
 /* =========================
@@ -123,7 +157,13 @@ async function findExport() {
   const arg = process.argv[2];
   if (arg) return path.resolve(process.env.INIT_CWD || '.', arg);
 
-  const candidates = (await fs.readdir(DOWNLOADS_DIR))
+  const downloads = await fs.readdir(DOWNLOADS_DIR).catch((err) => {
+    if (err.code !== 'EPERM') throw err;
+    throw new Error(
+      `sem permissão para ler ${DOWNLOADS_DIR} (macOS) — informe o caminho do lets-ui-icons-penpot.json`
+    );
+  });
+  const candidates = downloads
     .filter((f) => EXPORT_FILE.test(f))
     .map((f) => path.join(DOWNLOADS_DIR, f));
   if (!candidates.length) {

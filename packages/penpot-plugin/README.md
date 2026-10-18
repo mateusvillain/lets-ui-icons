@@ -12,7 +12,7 @@ Plugin do Penpot que exporta todos os ícones do arquivo para um único
    pnpm penpot-plugin
    ```
 
-2. No Penpot, abra o arquivo de ícones e o Plugin Manager
+2. No Penpot, **pelo Chrome**, abra o arquivo de ícones e o Plugin Manager
    (`Ctrl + Alt + P`). Instale pela URL
    `http://localhost:4400/manifest.json` (só na primeira vez).
 3. Abra o plugin e clique em **Exportar ícones**. O navegador baixa
@@ -25,6 +25,11 @@ Plugin do Penpot que exporta todos os ícones do arquivo para um único
    ```
 
 Se alguma variante falhar, o plugin lista os erros e não baixa nada.
+
+O Safari bloqueia páginas `https` (como o penpot.app) de carregar
+`http://localhost`, e a instalação falha com "The plugin doesn't exist or
+the URL is not correct". O Chrome aceita (pode pedir permissão de acesso à
+rede local na primeira vez).
 
 ## Estrutura esperada no Penpot
 

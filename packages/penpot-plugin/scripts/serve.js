@@ -26,6 +26,8 @@ const CORS = {
 };
 
 const server = http.createServer(async (req, res) => {
+  console.log(`${req.method} ${req.url} ← ${req.headers.origin ?? '-'}`);
+
   if (req.method === 'OPTIONS') {
     res.writeHead(204, { ...CORS, 'Access-Control-Allow-Headers': '*' });
     return res.end();

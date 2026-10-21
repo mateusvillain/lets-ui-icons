@@ -8,7 +8,9 @@ export default {
     {
       name: 'removeAttrs',
       params: {
-        attrs: '(fill|stroke)',
+        // Mantém fill="none"/stroke="currentColor" dos traços (Penpot):
+        // sem eles, um path aberto renderiza preenchido
+        attrs: '*:(fill|stroke):(?!none$|currentColor$).*',
       },
     },
   ],

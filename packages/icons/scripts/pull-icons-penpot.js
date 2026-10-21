@@ -114,7 +114,8 @@ function cleanPenpotSvg(raw) {
     if (style.stroke && style.stroke !== 'none') {
       if (tag !== 'path') throw new Error(`stroke em <${tag}> não suportado`);
       elements.add(
-        `<path d="${d(attrs.d)}" stroke-width="${parseFloat(style['stroke-width'])}"` +
+        `<path d="${d(attrs.d)}" fill="none" stroke="currentColor"` +
+          ` stroke-width="${parseFloat(style['stroke-width'])}"` +
           ` stroke-linecap="${style['stroke-linecap'] || 'round'}"` +
           ` stroke-linejoin="${style['stroke-linejoin'] || 'round'}"/>`
       );
